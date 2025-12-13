@@ -1,73 +1,119 @@
-# React + TypeScript + Vite
+# 💎 Crystal Clicker - Telegram Mini App
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Idle-кликер игра с полной интеграцией Telegram Mini Apps.
 
-Currently, two official plugins are available:
+## 🚀 Быстрый старт
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### Локально
+```bash
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### Деплой в Telegram
+```bash
+npm run build
+vercel --prod
 ```
+
+Затем настройте Mini App в [@BotFather](https://t.me/BotFather):
+```
+/newapp
+```
+
+## ✨ Особенности
+
+### 🎮 Игровые механики
+- ⚡ Клик по кристаллу для заработка
+- 👷 Воркеры (автоматическое производство)
+- 🔧 Апгрейды (усиления клика и производства)
+- 🌟 Престиж система с постоянными бонусами
+- 💾 Автосохранение каждые 30 секунд
+- ⏱ Оффлайн прогресс
+
+### 📱 Telegram интеграция
+- ✅ **Адаптивная тема** - автоматически под настройки пользователя
+- ✅ **Haptic feedback** - вибрация на все действия
+- ✅ **Viewport expansion** - полноэкранный режим
+- ✅ **Closing confirmation** - защита от случайного закрытия
+- ✅ **Main Button** - нативная кнопка Telegram
+- ✅ **Кросс-платформа** - работает и в браузере
+
+## 📦 Технологии
+
+- **React 18** + TypeScript
+- **Zustand** - state management
+- **@telegram-apps/sdk** - Telegram интеграция
+- **break_infinity.js** - большие числа
+- **Vite** - сборка
+- **SCSS Modules** - стили
+
+## 📁 Структура
+
+```
+src/
+├── components/      # React компоненты
+├── configs/         # Игровые конфиги (воркеры, апгрейды)
+├── stores/          # Zustand stores
+├── hooks/           # Custom hooks
+├── providers/       # Telegram provider
+├── types/           # TypeScript types
+└── utils/           # Утилиты
+```
+
+## 📚 Документация
+
+- **[QUICK_START_TELEGRAM.md](QUICK_START_TELEGRAM.md)** - быстрый старт
+- **[TELEGRAM_INTEGRATION.md](TELEGRAM_INTEGRATION.md)** - детали интеграции
+- **[TELEGRAM_DEPLOY.md](TELEGRAM_DEPLOY.md)** - гайд по деплою
+- **[ARCHITECTURE.md](ARCHITECTURE.md)** - архитектура проекта
+
+## 🎯 Команды
+
+```bash
+npm run dev      # Локальный сервер
+npm run build    # Продакшн билд
+npm run preview  # Превью билда
+```
+
+## 🔧 Конфигурация
+
+### Добавить воркера
+Отредактируйте `src/configs/workers.ts`
+
+### Добавить апгрейд
+Отредактируйте `src/configs/upgrades.ts`
+
+### Настроить престиж
+Отредактируйте `src/configs/prestige.ts`
+
+## 🌐 Деплой
+
+### Vercel (рекомендуется)
+```bash
+vercel --prod
+```
+
+### GitHub Pages / Netlify / Cloudflare
+Просто задеплойте папку `dist/` после `npm run build`
+
+## 🐛 Отладка
+
+- Откройте DevTools Console для логов
+- Telegram Desktop: F12
+- Проверьте `vercel.json` для настроек
+
+## 📄 Лицензия
+
+MIT
+
+## 🙏 Благодарности
+
+- [Telegram Mini Apps](https://docs.telegram-mini-apps.com/)
+- [break_infinity.js](https://github.com/Patashu/break_infinity.js)
+
+---
+
+**Готово к игре! 🎮**
+
+Запустите локально или задеплойте в Telegram.

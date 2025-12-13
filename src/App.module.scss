@@ -4,6 +4,13 @@
   --sheet-peek: 92px; // visible height when sheet is closed (tabs + handle)
   --click-size: 260px;
 
+  // Telegram theme colors (fallback если SDK не загружен)
+  --card-bg: var(--tg-theme-secondary-bg-color, rgba(255, 255, 255, 0.1));
+  --button-color: var(--tg-theme-button-color, #2ea6ff);
+  --button-text: var(--tg-theme-button-text-color, #ffffff);
+  --hint-color: var(--tg-theme-hint-color, rgba(255, 255, 255, 0.6));
+  --link-color: var(--tg-theme-link-color, #2ea6ff);
+
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -16,6 +23,7 @@
   padding-bottom: calc(1rem + var(--sheet-peek) + env(safe-area-inset-bottom));
   max-width: 600px;
   margin: 0 auto;
+  background-color: var(--tg-theme-bg-color, #242424);
 }
 
 .sheetOpen {
@@ -23,7 +31,7 @@
 }
 
 // Общий стиль для карточек
-$cardBg: rgba(255, 255, 255, 0.1);
+$cardBg: var(--card-bg, rgba(255, 255, 255, 0.1));
 $cardBorderRadius: 8px;
 $cardPadding: 1rem;
 

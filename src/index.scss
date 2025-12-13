@@ -10,9 +10,24 @@
   line-height: 1.5;
   font-weight: 400;
 
+  // Цвета по умолчанию (fallback для браузера)
   color-scheme: dark;
   color: rgba(255, 255, 255, 0.87);
   background-color: #242424;
+
+  // Telegram Mini Apps CSS переменные (автоматически инжектятся SDK)
+  // Если запущено в Telegram, эти переменные будут переопределены
+  --tg-theme-bg-color: #242424;
+  --tg-theme-text-color: rgba(255, 255, 255, 0.87);
+  --tg-theme-hint-color: rgba(255, 255, 255, 0.6);
+  --tg-theme-link-color: #2ea6ff;
+  --tg-theme-button-color: #2ea6ff;
+  --tg-theme-button-text-color: #ffffff;
+  --tg-theme-secondary-bg-color: #1a1a1a;
+  
+  // Используем Telegram цвета если доступны
+  color: var(--tg-theme-text-color);
+  background-color: var(--tg-theme-bg-color);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -33,6 +48,10 @@ body {
   position: fixed; // Запрет скролла на мобильных
   width: 100%;
   touch-action: manipulation; // Запрет зума жестами
+  
+  // Используем Telegram тему
+  background-color: var(--tg-theme-bg-color);
+  color: var(--tg-theme-text-color);
 }
 
 #root {

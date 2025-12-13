@@ -3,6 +3,8 @@ import { useGameStore } from './stores/gameStore'
 import { useMultiplierStore } from './stores/multiplierStore'
 import { usePrestigeStore } from './stores/prestigeStore'
 import { useGameLoop } from './hooks/useGameLoop'
+import { useTelegramHaptics } from './hooks/useTelegramHaptics'
+import { useTelegramMainButton } from './hooks/useTelegramMainButton'
 import { formatNumber } from './utils/numberFormatter'
 import { checkAndMigrate } from './utils/migration'
 import { getUpgradesByCategory } from './configs/upgrades'
@@ -25,6 +27,9 @@ function App() {
   const [dragStartY, setDragStartY] = useState(0)
   const [hasDragged, setHasDragged] = useState(false)
   const sheetRef = useRef<HTMLDivElement>(null)
+  
+  // Telegram haptic feedback
+  const haptics = useTelegramHaptics()
   
   // Game state
   const {
@@ -96,7 +101,46 @@ function App() {
   // Prestige handler
   const handlePrestige = () => {
     if (window.confirm('Вы уверены? Весь прогресс будет сброшен!')) {
+      haptics.warning()
       performPrestige(totalCrystalsEarned, reset)
+      haptics.success()
+    }
+  }
+  
+  // Telegram MainButton для престижа (показывается только на вкладке престижа)
+  useTelegramMainButton({
+    text: canDoPrestige 
+      ? `🌟 Престиж (+${formatNumber(prestigeReward)})` 
+      : '🌟 Престиж (недоступен)',
+    isVisible: activeTab === 'prestige',
+    isEnabled: canDoPrestige,
+    onClick: handlePrestige,
+  })
+  
+  // Click handler с тактильной обратной связью
+  const handleClick = () => {
+    click()
+    haptics.light()
+  }
+  
+  // Wrapped buy functions с haptics
+  const handleBuyWorker = (workerId: string) => {
+    const canBuy = canAffordWorker(workerId)
+    if (canBuy) {
+      buyWorker(workerId)
+      haptics.medium()
+    } else {
+      haptics.error()
+    }
+  }
+  
+  const handleBuyUpgrade = (upgradeId: string) => {
+    const canBuy = canAffordUpgrade(upgradeId)
+    if (canBuy) {
+      buyUpgrade(upgradeId)
+      haptics.medium()
+    } else {
+      haptics.error()
     }
   }
   
@@ -121,6 +165,7 @@ function App() {
   const isSheetOpen = activeTab !== null
 
   const handleTabClick = (tab: Tab) => {
+    haptics.selectionChanged()
     setActiveTab(prev => (prev === tab ? null : tab))
   }
 
@@ -269,7 +314,7 @@ function App() {
 
       {/* Click button with CPS below */}
       <div className={styles.clickArea}>
-        <button className={styles.clickButton} onClick={click}>
+        <button className={styles.clickButton} onClick={handleClick}>
           <img src={diamondImage} alt="Diamond" className={styles.diamondImage} />
         </button>
       </div>
@@ -353,7 +398,7 @@ function App() {
                       cost={cost}
                       canAfford={canAfford}
                       isUnlocked={unlocked}
-                      onBuy={() => buyUpgrade(config.id)}
+                      onBuy={() => handleBuyUpgrade(config.id)}
                     />
                   )
                 })}
@@ -374,10 +419,10 @@ function App() {
                         key={config.id}
                         config={config}
                         level={level}
-                        cost={cost}
-                        canAfford={canAfford}
-                        isUnlocked={unlocked}
-                        onBuy={() => buyUpgrade(config.id)}
+                      cost={cost}
+                      canAfford={canAfford}
+                      isUnlocked={unlocked}
+                      onBuy={() => handleBuyUpgrade(config.id)}
                       />
                     )
                   })}
@@ -413,7 +458,7 @@ function App() {
                       cps={cps}
                       canAfford={canAfford}
                       isUnlocked={unlocked}
-                      onBuy={() => buyWorker(config.id)}
+                      onBuy={() => handleBuyWorker(config.id)}
                     />
                   )
                 })}
@@ -434,10 +479,10 @@ function App() {
                         key={config.id}
                         config={config}
                         level={level}
-                        cost={cost}
-                        canAfford={canAfford}
-                        isUnlocked={unlocked}
-                        onBuy={() => buyUpgrade(config.id)}
+                      cost={cost}
+                      canAfford={canAfford}
+                      isUnlocked={unlocked}
+                      onBuy={() => handleBuyUpgrade(config.id)}
                       />
                     )
                   })}
