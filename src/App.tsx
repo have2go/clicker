@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { useGameStore } from './stores/gameStore'
 import { useMultiplierStore } from './stores/multiplierStore'
 import { usePrestigeStore } from './stores/prestigeStore'
@@ -20,7 +20,11 @@ const DEV_MODE = true
 type Tab = 'active' | 'passive' | 'stats' | 'prestige'
 
 function App() {
-  const [activeTab, setActiveTab] = useState<Tab>('active')
+  const [activeTab, setActiveTab] = useState<Tab | null>(null)
+  const [isDragging, setIsDragging] = useState(false)
+  const [dragStartY, setDragStartY] = useState(0)
+  const [hasDragged, setHasDragged] = useState(false)
+  const sheetRef = useRef<HTMLDivElement>(null)
   
   // Game state
   const {
@@ -114,18 +118,139 @@ function App() {
   
   const workers = useMemo(() => getWorkersSorted(), [])
 
+  const isSheetOpen = activeTab !== null
+
+  const handleTabClick = (tab: Tab) => {
+    setActiveTab(prev => (prev === tab ? null : tab))
+  }
+
+  // Gesture handlers for bottom sheet
+  const handleGestureStart = (clientY: number, target: EventTarget | null) => {
+    // Не начинаем драг если кликнули по табу
+    if (target instanceof HTMLElement && target.closest(`.${styles.tab}`)) {
+      return
+    }
+    
+    setIsDragging(true)
+    setDragStartY(clientY)
+    setHasDragged(false)
+  }
+
+  const handleGestureMove = (clientY: number) => {
+    if (!isDragging || !sheetRef.current) return
+
+    const deltaY = clientY - dragStartY
+    
+    // Отмечаем, что был драг, если движение больше 5px
+    if (Math.abs(deltaY) > 5) {
+      setHasDragged(true)
+    }
+    
+    // Only allow dragging within reasonable bounds
+    if (isSheetOpen && deltaY > 0) {
+      // Dragging down when open
+      const clampedDelta = Math.min(deltaY, 300)
+      sheetRef.current.style.transform = `translate(-50%, ${clampedDelta}px)`
+    } else if (!isSheetOpen && deltaY < 0) {
+      // Dragging up when closed
+      const clampedDelta = Math.max(deltaY, -300)
+      sheetRef.current.style.transform = `translate(-50%, calc(100% - var(--sheet-peek) + ${clampedDelta}px))`
+    }
+  }
+
+  const handleGestureEnd = (clientY: number) => {
+    if (!isDragging || !sheetRef.current) return
+
+    const deltaY = clientY - dragStartY
+    const threshold = 100 // minimum drag distance to trigger state change
+
+    // Reset transform
+    sheetRef.current.style.transform = ''
+
+    if (isSheetOpen && deltaY > threshold) {
+      // Swiped down - close sheet
+      setActiveTab(null)
+    } else if (!isSheetOpen && deltaY < -threshold) {
+      // Swiped up - open sheet with first tab
+      setActiveTab('active')
+    }
+
+    setIsDragging(false)
+    setDragStartY(0)
+  }
+
+  // Handle click on handle (tap to toggle)
+  const handleHandleClick = (e: React.MouseEvent | React.TouchEvent) => {
+    // Не обрабатываем клик если был драг
+    if (hasDragged) {
+      setHasDragged(false)
+      return
+    }
+
+    e.stopPropagation() // Предотвращаем всплытие к header
+
+    // Toggle sheet
+    if (isSheetOpen) {
+      setActiveTab(null)
+    } else {
+      setActiveTab('active')
+    }
+  }
+
+  // Touch event handlers
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0]
+    if (touch) {
+      handleGestureStart(touch.clientY, e.target)
+    }
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    const touch = e.touches[0]
+    if (touch) {
+      handleGestureMove(touch.clientY)
+    }
+  }
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    const touch = e.changedTouches[0]
+    if (touch) {
+      handleGestureEnd(touch.clientY)
+    }
+  }
+
+  // Mouse event handlers (for desktop)
+  const handleMouseDown = (e: React.MouseEvent) => {
+    handleGestureStart(e.clientY, e.target)
+  }
+
+  useEffect(() => {
+    if (!isDragging) return
+
+    const handleMouseMove = (e: MouseEvent) => {
+      handleGestureMove(e.clientY)
+    }
+
+    const handleMouseUp = (e: MouseEvent) => {
+      handleGestureEnd(e.clientY)
+    }
+
+    document.addEventListener('mousemove', handleMouseMove)
+    document.addEventListener('mouseup', handleMouseUp)
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [isDragging, dragStartY, isSheetOpen])
+
   return (
-    <div className={styles.container}>
+    <div className={`${styles.container} ${isSheetOpen ? styles.sheetOpen : ''}`}>
       {/* Header: Crystal counter */}
       <div className={styles.crystalsStat}>
         <div className={styles.crystalsAmount}>
           💎 {formatNumber(crystals)} Cr
         </div>
-        {totalCps.gt(0) && (
-          <div className={styles.cpsDisplay}>
-            +{formatNumber(totalCps)} Cr/s
-          </div>
-        )}
         {DEV_MODE && (
           <button 
             className={styles.resetButton} 
@@ -136,72 +261,85 @@ function App() {
           </button>
         )}
       </div>
+      {totalCps.gt(0) && (
+        <div className={styles.cpsUnderHeader}>
+          +{formatNumber(totalCps)} Cr/s
+        </div>
+      )}
 
-      {/* Click button */}
-      <button className={styles.clickButton} onClick={click}>
-        <img src={diamondImage} alt="Diamond" className={styles.diamondImage} />
-      </button>
-
-      {/* Tab navigation */}
-      <div className={styles.tabs}>
-        <button
-          className={`${styles.tab} ${activeTab === 'active' ? styles.tabActive : ''}`}
-          onClick={() => setActiveTab('active')}
-        >
-          ⚡ Активные
-        </button>
-        <button
-          className={`${styles.tab} ${activeTab === 'passive' ? styles.tabActive : ''}`}
-          onClick={() => setActiveTab('passive')}
-        >
-          👷 Пассивные
-        </button>
-        <button
-          className={`${styles.tab} ${activeTab === 'prestige' ? styles.tabActive : ''}`}
-          onClick={() => setActiveTab('prestige')}
-        >
-          🌟 Престиж
-        </button>
-        <button
-          className={`${styles.tab} ${activeTab === 'stats' ? styles.tabActive : ''}`}
-          onClick={() => setActiveTab('stats')}
-        >
-          📊 Инфо
+      {/* Click button with CPS below */}
+      <div className={styles.clickArea}>
+        <button className={styles.clickButton} onClick={click}>
+          <img src={diamondImage} alt="Diamond" className={styles.diamondImage} />
         </button>
       </div>
 
-      {/* Content */}
-      <div className={styles.content}>
-        {activeTab === 'active' && (
-          <div className={styles.upgradesSection}>
-            {/* Click upgrades */}
-            <div className={styles.categorySection}>
-              <h3 className={styles.categoryTitle}>Усиления клика</h3>
-              {activeUpgrades.map(config => {
-                const level = getUpgradeLevel(config.id)
-                const cost = getUpgradeCost(config.id)
-                const unlocked = isUpgradeUnlocked(config.id)
-                const canAfford = canAffordUpgrade(config.id)
-                
-                return (
-                  <UpgradeCard
-                    key={config.id}
-                    config={config}
-                    level={level}
-                    cost={cost}
-                    canAfford={canAfford}
-                    isUnlocked={unlocked}
-                    onBuy={() => buyUpgrade(config.id)}
-                  />
-                )
-              })}
-            </div>
-            
-            {/* Utility upgrades */}
-            {utilityUpgrades.some(u => isUpgradeUnlocked(u.id) || u.showBeforeUnlock) && (
+      {/* Bottom sheet overlay */}
+      <div
+        className={`${styles.sheetOverlay} ${isSheetOpen ? styles.sheetOverlayOpen : ''}`}
+        onClick={() => setActiveTab(null)}
+        aria-hidden={!isSheetOpen}
+      />
+
+      {/* Bottom sheet (tabs are the header, content slides up) */}
+      <div
+        ref={sheetRef}
+        className={`${styles.bottomSheet} ${isSheetOpen ? styles.bottomSheetOpen : ''} ${isDragging ? styles.bottomSheetDragging : ''}`}
+        role="dialog"
+        aria-label="Меню"
+        aria-hidden={!isSheetOpen}
+      >
+        <div 
+          className={styles.sheetHeader}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          onMouseDown={handleMouseDown}
+        >
+          <div 
+            className={styles.sheetHandle}
+            onClick={handleHandleClick}
+          />
+
+          <div className={styles.tabs}>
+            <button
+              className={`${styles.tab} ${activeTab === 'active' ? styles.tabActive : ''}`}
+              onClick={() => handleTabClick('active')}
+            >
+              <span className={styles.tabIcon}>⚡</span>
+              <span className={styles.tabText}> Клик</span>
+            </button>
+            <button
+              className={`${styles.tab} ${activeTab === 'passive' ? styles.tabActive : ''}`}
+              onClick={() => handleTabClick('passive')}
+            >
+              <span className={styles.tabIcon}>👷</span>
+              <span className={styles.tabText}> Воркеры</span>
+            </button>
+            <button
+              className={`${styles.tab} ${activeTab === 'prestige' ? styles.tabActive : ''}`}
+              onClick={() => handleTabClick('prestige')}
+            >
+              <span className={styles.tabIcon}>🌟</span>
+              <span className={styles.tabText}> Престиж</span>
+            </button>
+            <button
+              className={`${styles.tab} ${activeTab === 'stats' ? styles.tabActive : ''}`}
+              onClick={() => handleTabClick('stats')}
+            >
+              <span className={styles.tabIcon}>📊</span>
+              <span className={styles.tabText}> Инфо</span>
+            </button>
+          </div>
+        </div>
+
+        <div className={styles.sheetContent}>
+          {activeTab === 'active' && (
+            <div className={styles.upgradesSection}>
+              {/* Click upgrades */}
               <div className={styles.categorySection}>
-                <h3 className={styles.categoryTitle}>Автоматизация</h3>
-                {utilityUpgrades.map(config => {
+                <h3 className={styles.categoryTitle}>Усиления клика</h3>
+                {activeUpgrades.map(config => {
                   const level = getUpgradeLevel(config.id)
                   const cost = getUpgradeCost(config.id)
                   const unlocked = isUpgradeUnlocked(config.id)
@@ -220,94 +358,119 @@ function App() {
                   )
                 })}
               </div>
-            )}
-          </div>
-        )}
-
-        {activeTab === 'passive' && (
-          <div className={styles.passiveSection}>
-            {/* Workers */}
-            <div className={styles.categorySection}>
-              <h3 className={styles.categoryTitle}>Воркеры</h3>
-              {workers.map(config => {
-                const count = getWorkerCount(config.id)
-                const cost = getWorkerCost(config.id)
-                const unlocked = isWorkerUnlocked(config.id)
-                const canAfford = canAffordWorker(config.id)
-                const workerMultiplier = getWorkerMultiplier(config.id)
-                const cps = config.baseCps.mul(count).mul(workerMultiplier)
-                
-                // Skip locked workers that shouldn't be shown
-                if (!unlocked && !config.showBeforeUnlock) {
-                  return null
-                }
-                
-                return (
-                  <WorkerCard
-                    key={config.id}
-                    config={config}
-                    count={count}
-                    cost={cost}
-                    cps={cps}
-                    canAfford={canAfford}
-                    isUnlocked={unlocked}
-                    onBuy={() => buyWorker(config.id)}
-                  />
-                )
-              })}
+              
+              {/* Utility upgrades */}
+              {utilityUpgrades.some(u => isUpgradeUnlocked(u.id) || u.showBeforeUnlock) && (
+                <div className={styles.categorySection}>
+                  <h3 className={styles.categoryTitle}>Автоматизация</h3>
+                  {utilityUpgrades.map(config => {
+                    const level = getUpgradeLevel(config.id)
+                    const cost = getUpgradeCost(config.id)
+                    const unlocked = isUpgradeUnlocked(config.id)
+                    const canAfford = canAffordUpgrade(config.id)
+                    
+                    return (
+                      <UpgradeCard
+                        key={config.id}
+                        config={config}
+                        level={level}
+                        cost={cost}
+                        canAfford={canAfford}
+                        isUnlocked={unlocked}
+                        onBuy={() => buyUpgrade(config.id)}
+                      />
+                    )
+                  })}
+                </div>
+              )}
             </div>
-            
-            {/* Passive upgrades */}
-            {passiveUpgrades.some(u => isUpgradeUnlocked(u.id) || u.showBeforeUnlock) && (
+          )}
+
+          {activeTab === 'passive' && (
+            <div className={styles.passiveSection}>
+              {/* Workers */}
               <div className={styles.categorySection}>
-                <h3 className={styles.categoryTitle}>Усиления производства</h3>
-                {passiveUpgrades.map(config => {
-                  const level = getUpgradeLevel(config.id)
-                  const cost = getUpgradeCost(config.id)
-                  const unlocked = isUpgradeUnlocked(config.id)
-                  const canAfford = canAffordUpgrade(config.id)
+                <h3 className={styles.categoryTitle}>Воркеры</h3>
+                {workers.map(config => {
+                  const count = getWorkerCount(config.id)
+                  const cost = getWorkerCost(config.id)
+                  const unlocked = isWorkerUnlocked(config.id)
+                  const canAfford = canAffordWorker(config.id)
+                  const workerMultiplier = getWorkerMultiplier(config.id)
+                  const cps = config.baseCps.mul(count).mul(workerMultiplier)
+                  
+                  // Skip locked workers that shouldn't be shown
+                  if (!unlocked && !config.showBeforeUnlock) {
+                    return null
+                  }
                   
                   return (
-                    <UpgradeCard
+                    <WorkerCard
                       key={config.id}
                       config={config}
-                      level={level}
+                      count={count}
                       cost={cost}
+                      cps={cps}
                       canAfford={canAfford}
                       isUnlocked={unlocked}
-                      onBuy={() => buyUpgrade(config.id)}
+                      onBuy={() => buyWorker(config.id)}
                     />
                   )
                 })}
               </div>
-            )}
-          </div>
-        )}
+              
+              {/* Passive upgrades */}
+              {passiveUpgrades.some(u => isUpgradeUnlocked(u.id) || u.showBeforeUnlock) && (
+                <div className={styles.categorySection}>
+                  <h3 className={styles.categoryTitle}>Усиления производства</h3>
+                  {passiveUpgrades.map(config => {
+                    const level = getUpgradeLevel(config.id)
+                    const cost = getUpgradeCost(config.id)
+                    const unlocked = isUpgradeUnlocked(config.id)
+                    const canAfford = canAffordUpgrade(config.id)
+                    
+                    return (
+                      <UpgradeCard
+                        key={config.id}
+                        config={config}
+                        level={level}
+                        cost={cost}
+                        canAfford={canAfford}
+                        isUnlocked={unlocked}
+                        onBuy={() => buyUpgrade(config.id)}
+                      />
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          )}
 
-        {activeTab === 'prestige' && (
-          <PrestigePanel
-            totalCrystalsEarned={totalCrystalsEarned}
-            prestigeLevel={prestigeLevel}
-            prestigeCurrency={prestigeCurrency}
-            canPrestige={canDoPrestige}
-            prestigeReward={prestigeReward}
-            onPrestige={handlePrestige}
-            onBuyUpgrade={buyPrestigeUpgrade}
-            getUpgradeLevel={getPrestigeUpgradeLevel}
-            canAffordUpgrade={canAffordPrestigeUpgrade}
-          />
-        )}
+          {activeTab === 'prestige' && (
+            <PrestigePanel
+              totalCrystalsEarned={totalCrystalsEarned}
+              prestigeLevel={prestigeLevel}
+              prestigeCurrency={prestigeCurrency}
+              canPrestige={canDoPrestige}
+              prestigeReward={prestigeReward}
+              onPrestige={handlePrestige}
+              onBuyUpgrade={buyPrestigeUpgrade}
+              getUpgradeLevel={getPrestigeUpgradeLevel}
+              canAffordUpgrade={canAffordPrestigeUpgrade}
+            />
+          )}
 
-        {activeTab === 'stats' && (
-          <StatsPanel
-            totalCrystalsEarned={totalCrystalsEarned}
-            totalCps={totalCps}
-            baseClickValue={baseClickValue}
-            clickMultiplier={clickMultiplier}
-            productionMultiplier={productionMultiplier}
-            totalClicks={totalClicks}
-          />
-        )}
+          {activeTab === 'stats' && (
+            <StatsPanel
+              totalCrystalsEarned={totalCrystalsEarned}
+              totalCps={totalCps}
+              baseClickValue={baseClickValue}
+              clickMultiplier={clickMultiplier}
+              productionMultiplier={productionMultiplier}
+              totalClicks={totalClicks}
+            />
+          )}
+        </div>
       </div>
     </div>
   )

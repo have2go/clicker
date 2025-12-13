@@ -2,6 +2,7 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  -webkit-tap-highlight-color: transparent; // Глобальный запрет синей подсветки
 }
 
 :root {
@@ -17,16 +18,26 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  
+  // Глобальная поддержка табличных цифр
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
 }
 
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  height: 100vh; // Фиксированная высота
+  overflow: hidden; // Запрет скролла на странице
+  position: fixed; // Запрет скролла на мобильных
+  width: 100%;
+  touch-action: manipulation; // Запрет зума жестами
 }
 
 #root {
   width: 100%;
-  min-height: 100vh;
+  height: 100vh; // Фиксированная высота
+  overflow: hidden; // Запрет скролла
 }
 

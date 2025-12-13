@@ -125,6 +125,7 @@ export function formatNumber(
 
 /**
  * Форматирование маленьких чисел (< 1000) с запятыми
+ * ВСЕГДА показывает фиксированное количество знаков после запятой
  */
 function formatSmallNumber(num: Decimal, decimals: number): string {
   const value = num.toNumber()
@@ -133,28 +134,25 @@ function formatSmallNumber(num: Decimal, decimals: number): string {
     return Math.floor(value).toLocaleString('en-US')
   }
   
-  // Показываем decimals знаков после запятой
-  const fixed = value.toFixed(decimals)
+  // ВСЕГДА показываем ровно 2 знака после запятой для консистентности
+  const fixed = value.toFixed(2)
   const [intPart, decPart] = fixed.split('.')
   
   // Форматируем целую часть с запятыми
   const formattedInt = parseInt(intPart).toLocaleString('en-US')
   
-  if (decPart && parseInt(decPart) > 0) {
-    return `${formattedInt}.${decPart}`
-  }
-  
-  return formattedInt
+  // ВСЕГДА добавляем дробную часть
+  return `${formattedInt}.${decPart}`
 }
 
 /**
  * Форматирование с суффиксами (K, M, B, T, ...)
- * Динамически выбирает количество знаков после запятой для лучшей читаемости
+ * ВСЕГДА показывает фиксированное количество знаков после запятой
  */
 function formatWithSuffix(
   num: Decimal,
-  minDigits: number,
-  maxDigits: number
+  _minDigits: number,
+  _maxDigits: number
 ): string {
   // Находим подходящий суффикс (берем последний, который меньше числа)
   let suffix = ''
@@ -172,48 +170,25 @@ function formatWithSuffix(
   const divided = num.div(divisor)
   const value = divided.toNumber()
   
-  // Определяем количество знаков после запятой
-  // Для больших чисел (>=100) показываем меньше знаков
-  let decimals: number
-  if (value >= 100) {
-    decimals = Math.max(0, maxDigits - 3) // 1-2 знака
-  } else if (value >= 10) {
-    decimals = Math.max(1, maxDigits - 2) // 2-3 знака
-  } else {
-    decimals = Math.max(2, maxDigits - 1) // 3-4 знака
-  }
+  // ФИКСИРОВАННОЕ количество знаков после запятой - ВСЕГДА 2!
+  const decimals = 2
   
-  // Форматируем число с нужным количеством знаков
-  let formatted = value.toFixed(decimals)
-  
-  // Убираем лишние нули в конце
-  formatted = formatted.replace(/\.?0+$/, '')
-  
-  // Убеждаемся что у нас минимум minDigits значащих цифр
-  const significantDigits = formatted.replace('.', '').length
-  if (significantDigits < minDigits) {
-    const needed = minDigits - significantDigits
-    if (!formatted.includes('.')) {
-      formatted += '.'
-    }
-    formatted += '0'.repeat(needed)
-  }
+  // Форматируем число с ФИКСИРОВАННЫМ количеством знаков
+  const formatted = value.toFixed(decimals)
   
   return formatted + suffix
 }
 
 /**
  * Форматирование в научную нотацию (1.23e45)
+ * ВСЕГДА показывает фиксированное количество знаков
  */
-function formatScientific(num: Decimal, maxDigits: number): string {
+function formatScientific(num: Decimal, _maxDigits: number): string {
   const exp = num.exponent
   const mantissa = num.mantissa
   
-  // Форматируем мантиссу с нужным количеством знаков
-  let formattedMantissa = mantissa.toFixed(maxDigits - 1)
-  
-  // Убираем лишние нули
-  formattedMantissa = formattedMantissa.replace(/\.?0+$/, '')
+  // ВСЕГДА 2 знака после запятой для мантиссы
+  const formattedMantissa = mantissa.toFixed(2)
   
   return `${formattedMantissa}e${exp}`
 }

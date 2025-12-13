@@ -4,9 +4,11 @@
   border-radius: 12px;
   padding: 16px;
   margin-bottom: 12px;
-  transition: all 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
   position: relative;
   overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+  pointer-events: auto;
   
   &::before {
     content: '';
@@ -21,8 +23,7 @@
   
   &:hover {
     border-color: rgba(255, 255, 255, 0.4);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   }
   
   &.locked {
@@ -87,6 +88,8 @@
   font-size: 14px;
   color: #4CAF50;
   font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
 }
 
 .quantity {
@@ -109,6 +112,8 @@
   font-size: 18px;
   color: #fff;
   font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
 }
 
 .buyButton {
@@ -122,6 +127,8 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation; // Для кнопки - manipulation правильно
   
   &:hover:not(:disabled) {
     transform: scale(1.02);
@@ -143,6 +150,8 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
 }
 
 .unlockHint {

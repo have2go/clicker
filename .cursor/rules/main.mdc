@@ -1,0 +1,431 @@
+---
+alwaysApply: true
+---
+# Clicker Game - Cursor AI Rules
+
+## 🎯 Архитектура проекта
+
+Это idle-кликер с масштабируемой конфигурационной архитектурой на React + TypeScript + Zustand.
+
+### Ключевые принципы:
+1. **Конфигурация > Хардкод** - все игровые данные в `configs/`, код generic
+2. **Большие числа** - используем `break_infinity.js` через wrapper `utils/bigNumber.ts`
+3. **Типобезопасность** - строгий TypeScript, type imports где возможно
+4. **Производительность** - RAF loop 60+ FPS, мемоизация, ленивый рендеринг
+5. **Модульность** - разделение на stores, configs, components, types, utils
+
+## 📁 Структура проекта
+
+```
+src/
+├── components/       # React компоненты (мемоизированные)
+│   ├── UpgradeCard   # Универсальная карточка апгрейда
+│   ├── WorkerCard    # Универсальная карточка воркера
+│   ├── StatsPanel    # Панель статистики
+│   └── PrestigePanel # Панель престижа
+├── configs/          # Конфигурации (добавлять новые элементы здесь)
+│   ├── upgrades.ts   # Все апгрейды игры
+│   ├── workers.ts    # Все воркеры игры
+│   └── prestige.ts   # Настройки престижа
+├── stores/           # State management (Zustand)
+│   ├── gameStore     # Основное состояние (crystals, workers, upgrades)
+│   ├── multiplierStore # Централизованные множители
+│   └── prestigeStore # Престиж-валюта и апгрейды
+├── types/            # TypeScript типы и интерфейсы
+├── utils/            # Утилиты
+│   ├── bigNumber     # Wrapper для Decimal с helpers
+│   ├── numberFormatter # Форматирование с mixed notation
+│   └── migration     # Миграция сохранений
+└── hooks/
+    └── useGameLoop   # RAF цикл (~60-240 FPS)
+```
+
+## 🔢 Работа с большими числами
+
+**ВСЕГДА используй `Decimal` вместо `number` для игровых значений!**
+
+```typescript
+import { D, Decimal } from '../utils/bigNumber'
+
+// ✅ Правильно
+const cost = D(100)
+const newValue = cost.mul(1.5).add(50)
+
+// ❌ Неправильно
+const cost = 100
+const newValue = cost * 1.5 + 50
+```
+
+### Основные функции из bigNumber.ts:
+- `D(value)` - создать Decimal
+- `calculateUpgradeCost(base, growth, level)` - стоимость с ростом
+- `canAfford(current, cost)` - проверка достаточности средств
+- `serializeDecimal()` / `deserializeDecimal()` - для сохранений
+
+## 📊 Форматирование чисел
+
+**Используй функции из `numberFormatter.ts`:**
+
+```typescript
+import { formatNumber, formatMultiplier } from '../utils/numberFormatter'
+
+// Основное форматирование (2-4 значащих цифры)
+formatNumber(D(1234567))  // "1.234M"
+formatNumber(D(1e50))     // "1.00e50"
+
+// Для множителей
+formatMultiplier(D(2.5))  // "x2.50"
+
+// Компактное (для UI с малым местом)
+formatNumberCompact(value)
+
+// Точное (для статистики)
+formatNumberPrecise(value)
+```
+
+**Форматирование использует mixed notation:**
+- До 1K: обычные числа (1,234.5)
+- 1K - 1Dc: суффиксы (K, M, B, T, Qa, Qi, Sx, Sp, Oc, No, Dc)
+- После 1e33: научная (1.23e45)
+
+## ➕ Добавление нового апгрейда
+
+1. Открой `src/configs/upgrades.ts`
+2. Добавь новый объект в `UPGRADES`:
+
+```typescript
+export const UPGRADES: Record<string, UpgradeConfig> = {
+  // ... существующие
+  
+  myNewUpgrade: {
+    id: 'myNewUpgrade',
+    name: 'Название апгрейда',
+    description: 'Описание эффекта',
+    icon: '⚡', // emoji иконка
+    type: UpgradeType.MULTIPLIER, // CLICK | MULTIPLIER | AUTOCLICKER | SPECIAL
+    category: UpgradeCategory.ACTIVE, // ACTIVE | PASSIVE | UTILITY | SPECIAL
+    baseCost: D(1000),
+    costGrowth: 1.8, // новая стоимость = текущая * growth
+    effect: (level: number) => ({
+      type: 'multiplicative', // 'additive' | 'multiplicative'
+      target: 'click', // 'click' | 'production' | 'worker' | 'global'
+      value: D(Math.pow(1.25, level)), // формула эффекта
+    }),
+    maxLevel: 50, // опционально
+    unlockRequirement: { // опционально
+      type: 'crystals',
+      amount: D(5000),
+    },
+    showBeforeUnlock: true, // показывать до разблокировки
+  },
+}
+```
+
+**Всё! Апгрейд автоматически появится в UI с правильной категорией.**
+
+## 👷 Добавление нового воркера
+
+1. Открой `src/configs/workers.ts`
+2. Добавь новый объект в `WORKERS`:
+
+```typescript
+export const WORKERS: Record<string, WorkerConfig> = {
+  // ... существующие
+  
+  myNewWorker: {
+    id: 'myNewWorker',
+    name: 'Новый воркер',
+    description: 'Описание работы',
+    icon: '🤖',
+    baseCps: D(1000), // производство в секунду
+    baseCost: D(50000),
+    costGrowth: 1.15, // стандартный множитель роста
+    order: 11, // порядок отображения в UI
+    color: '#FF5722', // цвет для UI (hex)
+    unlockRequirement: { // опционально
+      type: 'worker',
+      targetId: 'previousWorker',
+      level: 5,
+    },
+    showBeforeUnlock: true,
+  },
+}
+```
+
+## 🎨 Создание UI компонента
+
+**Всегда используй мемоизацию для компонентов в списках:**
+
+```typescript
+import { memo } from 'react'
+import type { SomeConfig } from '../types/something'
+
+export const MyCard = memo(function MyCard({ config, ...props }) {
+  // ... логика
+  
+  return (
+    <div className={styles.card}>
+      {/* JSX */}
+    </div>
+  )
+})
+```
+
+**CSS Modules паттерн:**
+```typescript
+import styles from './MyCard.module.scss'
+
+// Используй: styles.className
+```
+
+## 🏪 Работа с Zustand stores
+
+**Чтение:**
+```typescript
+const { crystals, totalCps } = useGameStore()
+// или селектор для оптимизации:
+const crystals = useGameStore(state => state.crystals)
+```
+
+**Действия:**
+```typescript
+const { buyWorker, buyUpgrade } = useGameStore()
+
+// Вызов action
+buyWorker('workerId')
+```
+
+**Важно:** Все вычисляемые значения (CPS, множители) должны пересчитываться в `recalculateStats()`
+
+## 🔄 Система множителей
+
+Множители автоматически применяются из апгрейдов и престижа через `multiplierStore`.
+
+**Добавить custom множитель:**
+```typescript
+import { useMultiplierStore } from './stores/multiplierStore'
+import { MultiplierType, MultiplierSource } from './types/multipliers'
+
+useMultiplierStore.getState().addMultiplier({
+  id: 'unique_id',
+  type: MultiplierType.GLOBAL,
+  source: MultiplierSource.ACHIEVEMENT,
+  value: D(1.5),
+  description: 'Описание бонуса',
+})
+```
+
+## 🌟 Престиж система
+
+Престиж в `src/stores/prestigeStore.ts` и `src/configs/prestige.ts`.
+
+**Формула награды:** `sqrt(totalCrystals / 1e6)`
+
+**Добавить престиж-апгрейд:**
+```typescript
+// src/configs/prestige.ts
+export const PRESTIGE_UPGRADES = {
+  myPrestigeUpgrade: {
+    id: 'myPrestigeUpgrade',
+    name: 'Название',
+    description: 'Описание',
+    icon: '💎',
+    cost: D(10), // стоимость в престиж-валюте
+    effect: (level: number) => ({
+      type: 'multiplier',
+      value: D(Math.pow(1.5, level)),
+      target: 'production',
+    }),
+  },
+}
+```
+
+## ⚡ Производительность
+
+### RAF Loop
+- Работает на частоте монитора (60-240 FPS)
+- Обновляет только `crystals` каждый кадр
+- ~0.5-2.5 мс на кадр (норма!)
+
+### Оптимизации:
+1. **useMemo** для дорогих вычислений:
+```typescript
+const expensiveValue = useMemo(() => calculateSomething(), [deps])
+```
+
+2. **memo** для компонентов списков:
+```typescript
+export const ListItem = memo(function ListItem({ ... }) { ... })
+```
+
+3. **Селекторы в Zustand:**
+```typescript
+// ❌ Плохо - перерисовка при любом изменении store
+const store = useGameStore()
+
+// ✅ Хорошо - перерисовка только при изменении crystals
+const crystals = useGameStore(state => state.crystals)
+```
+
+## 💾 Сохранения
+
+**Автосохранение:**
+- Каждые 30 секунд (AUTO_SAVE_INTERVAL)
+- После покупки воркера/апгрейда
+- После престижа
+
+**Оффлайн прогресс:**
+Автоматически рассчитывается при загрузке в `gameStore.loadFromStorage()`
+
+**Миграция версий:**
+Обрабатывается в `utils/migration.ts` - автоматическая конвертация старых сохранений
+
+## 🚫 Частые ошибки
+
+### ❌ НЕ делай:
+
+```typescript
+// 1. Хардкод игровых данных в компонентах
+const workerCost = 100 // ПЛОХО
+
+// 2. Использование number вместо Decimal
+const total = cost * count // ПЛОХО
+
+// 3. Прямая мутация state
+state.crystals += 10 // ПЛОХО
+
+// 4. Забывать type в imports (если enum/const)
+import { UpgradeType } from '../types' // может быть ошибка
+import { type UpgradeConfig, UpgradeType } from '../types' // ХОРОШО
+```
+
+### ✅ ДЕЛАЙ:
+
+```typescript
+// 1. Данные в конфигах
+const config = getWorker('basic')
+
+// 2. Decimal для всех игровых значений
+const total = cost.mul(count)
+
+// 3. Используй set из Zustand
+set({ crystals: state.crystals.add(earned) })
+
+// 4. Правильные type imports
+import { type SomeType, SomeValue } from '../types'
+```
+
+## 🎯 Конвенции кода
+
+### Именование:
+- **Компоненты**: PascalCase (`UpgradeCard.tsx`)
+- **Функции/переменные**: camelCase (`calculateCost`)
+- **Типы/интерфейсы**: PascalCase (`UpgradeConfig`)
+- **Константы**: UPPER_SNAKE_CASE (`UPGRADE_TYPES`)
+- **Файлы стилей**: ComponentName.module.scss
+
+### Структура файла:
+```typescript
+// 1. Импорты (группировка: React → библиотеки → локальные)
+import { memo } from 'react'
+import { Decimal } from '../utils/bigNumber'
+import type { MyConfig } from '../types/myType'
+
+// 2. Типы и интерфейсы
+interface MyProps { ... }
+
+// 3. Константы (если есть)
+const CONFIG = { ... }
+
+// 4. Основной компонент/функция
+export const MyComponent = memo(function MyComponent({ ... }) {
+  // хуки
+  // вычисления
+  // рендер
+})
+
+// 5. Вспомогательные функции (если приватные)
+function helper() { ... }
+```
+
+### TypeScript:
+- Используй `type` вместо `interface` где возможно
+- Всегда указывай типы в функциях
+- Используй `as const` для constant objects
+- Избегай `any` - используй `unknown` и type guards
+
+### React:
+- Функциональные компоненты с hooks
+- Мемоизация для списков и дорогих вычислений
+- Деструктуризация пропсов в параметрах
+- CSS Modules для стилей
+
+## 📦 Добавление зависимостей
+
+Если нужна новая библиотека:
+1. Убедись что она нужна (нет ли встроенного решения)
+2. Проверь размер бандла
+3. Установи с --save или --save-dev
+4. Обнови README/документацию если нужно
+
+## 🐛 Debugging
+
+### Console helpers:
+```javascript
+// Просмотр state
+useGameStore.getState()
+useMultiplierStore.getState()
+
+// Добавить кристаллы для теста
+useGameStore.setState({ crystals: D(1e9) })
+
+// Сбросить игру
+useGameStore.getState().reset()
+```
+
+### DevTools:
+- React DevTools - проверка ре-рендеров
+- Performance tab - профилирование RAF loop
+- Console - логи загрузки и миграций
+
+## 🎓 Примеры задач
+
+### "Добавить новый тип воркера"
+1. Открой `src/configs/workers.ts`
+2. Добавь объект в `WORKERS` по шаблону выше
+3. Готово! Воркер появится в UI автоматически
+
+### "Изменить формулу роста стоимости"
+1. Открой `src/utils/bigNumber.ts`
+2. Найди `calculateUpgradeCost`
+3. Измени формулу (сейчас: `baseCost * growth^level`)
+
+### "Добавить новую статистику в StatsPanel"
+1. Открой `src/components/StatsPanel.tsx`
+2. Добавь пропс в интерфейс
+3. Добавь div с классом `styles.stat`
+4. Передай данные из `App.tsx`
+
+## 🔒 Security & Best Practices
+
+- LocalStorage для сохранений (автоматические бэкапы)
+- Валидация при загрузке сохранений (см. `migration.ts`)
+- Безопасная десериализация Decimal (`safeDeserializeDecimal`)
+- DEV_MODE флаг для debug функций
+- TypeScript strict mode
+
+## 📚 Полезные ссылки
+
+- [break_infinity.js docs](https://github.com/Patashu/break_infinity.js)
+- [Zustand docs](https://github.com/pmndrs/zustand)
+- [RAF API](https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame)
+
+---
+
+**При изменениях всегда:**
+1. ✅ Проверяй типы (tsc --noEmit)
+2. ✅ Тестируй в браузере
+3. ✅ Проверь работу сохранений
+4. ✅ Убедись в производительности (DevTools Performance)
+5. ✅ Обнови документацию если нужно
+
