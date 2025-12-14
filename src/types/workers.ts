@@ -54,6 +54,11 @@ export interface WorkerConfig {
    * Порядковый номер для сортировки в UI
    */
   order: number
+  
+  /**
+   * ID апгрейда-буста для этого воркера
+   */
+  boostUpgradeId?: string
 }
 
 /**

@@ -138,6 +138,28 @@ export const usePrestigeStore = create<PrestigeStore>((set, get) => {
           description: config.name,
         })
       }
+      
+      // Обработка специальных апгрейдов
+      if (effect.type === 'special') {
+        // Апгрейды с престиж-валютой в формуле
+        if (upgradeId === 'exponentialGrowth' || upgradeId === 'presenceAmplification' || upgradeId === 'ultimateAscension') {
+          // Эти апгрейды масштабируются с престиж-валютой
+          // effectFormula уже возвращает правильный множитель на основе level (prestge currency)
+          const multValue = effect.value.pow(state.currency)
+          
+          if (multValue.gt(1)) {
+            multiplierStore.addMultiplier({
+              id: `prestige_upgrade_${upgradeId}`,
+              type: MultiplierType.GLOBAL,
+              source: MultiplierSource.PRESTIGE,
+              value: multValue,
+              description: config.name,
+            })
+          }
+        }
+        // Другие специальные апгрейды обрабатываются в gameStore
+        // (например, autoProgress, crystallineResonance, luckyClicks, timeWarp)
+      }
     })
   }
   

@@ -17,7 +17,7 @@ import { PrestigePanel } from './components/PrestigePanel'
 import styles from './App.module.scss'
 import diamondImage from './assets/diamond.svg'
 
-type Tab = 'active' | 'passive' | 'stats' | 'prestige'
+type Tab = 'active' | 'passive' | 'global' | 'offline' | 'stats' | 'prestige'
 
 function App() {
   const [activeTab, setActiveTab] = useState<Tab | null>(null)
@@ -155,6 +155,21 @@ function App() {
   
   const utilityUpgrades = useMemo(() => 
     getUpgradesByCategory(UpgradeCategory.UTILITY),
+    []
+  )
+  
+  const globalUpgrades = useMemo(() => 
+    getUpgradesByCategory(UpgradeCategory.GLOBAL),
+    []
+  )
+  
+  const offlineUpgrades = useMemo(() => 
+    getUpgradesByCategory(UpgradeCategory.OFFLINE),
+    []
+  )
+  
+  const synergyUpgrades = useMemo(() => 
+    getUpgradesByCategory(UpgradeCategory.SYNERGY),
     []
   )
   
@@ -360,10 +375,24 @@ function App() {
               <span className={styles.tabText}> Воркеры</span>
             </button>
             <button
+              className={`${styles.tab} ${activeTab === 'global' ? styles.tabActive : ''}`}
+              onClick={() => handleTabClick('global')}
+            >
+              <span className={styles.tabIcon}>🌟</span>
+              <span className={styles.tabText}> Глобальные</span>
+            </button>
+            <button
+              className={`${styles.tab} ${activeTab === 'offline' ? styles.tabActive : ''}`}
+              onClick={() => handleTabClick('offline')}
+            >
+              <span className={styles.tabIcon}>💤</span>
+              <span className={styles.tabText}> Offline</span>
+            </button>
+            <button
               className={`${styles.tab} ${activeTab === 'prestige' ? styles.tabActive : ''}`}
               onClick={() => handleTabClick('prestige')}
             >
-              <span className={styles.tabIcon}>🌟</span>
+              <span className={styles.tabIcon}>⭐</span>
               <span className={styles.tabText}> Престиж</span>
             </button>
             <button
@@ -397,6 +426,7 @@ function App() {
                       canAfford={canAfford}
                       isUnlocked={unlocked}
                       onBuy={() => handleBuyUpgrade(config.id)}
+                      isUpgradeUnlocked={isUpgradeUnlocked}
                     />
                   )
                 })}
@@ -421,6 +451,38 @@ function App() {
                       canAfford={canAfford}
                       isUnlocked={unlocked}
                       onBuy={() => handleBuyUpgrade(config.id)}
+                      isUpgradeUnlocked={isUpgradeUnlocked}
+                      />
+                    )
+                  })}
+                </div>
+              )}
+              
+              {/* Click Synergies */}
+              {synergyUpgrades.filter(u => u.id === 'clickResonance').some(u => isUpgradeUnlocked(u.id) || u.showBeforeUnlock) && (
+                <div className={styles.categorySection}>
+                  <h3 className={styles.categoryTitle}>⚡ Синергии</h3>
+                  {synergyUpgrades.filter(u => u.id === 'clickResonance').map(config => {
+                    const level = getUpgradeLevel(config.id)
+                    const cost = getUpgradeCost(config.id)
+                    const unlocked = isUpgradeUnlocked(config.id)
+                    const canAfford = canAffordUpgrade(config.id)
+                    
+                    // Skip locked upgrades that shouldn't be shown
+                    if (!unlocked && !config.showBeforeUnlock) {
+                      return null
+                    }
+                    
+                    return (
+                      <UpgradeCard
+                        key={config.id}
+                        config={config}
+                        level={level}
+                        cost={cost}
+                        canAfford={canAfford}
+                        isUnlocked={unlocked}
+                        onBuy={() => handleBuyUpgrade(config.id)}
+                        isUpgradeUnlocked={isUpgradeUnlocked}
                       />
                     )
                   })}
@@ -442,6 +504,14 @@ function App() {
                   const workerMultiplier = getWorkerMultiplier(config.id)
                   const cps = config.baseCps.mul(count).mul(workerMultiplier)
                   
+                  // Get boost info
+                  const boostLevel = config.boostUpgradeId ? getUpgradeLevel(config.boostUpgradeId) : undefined
+                  const boostCost = config.boostUpgradeId ? getUpgradeCost(config.boostUpgradeId) : undefined
+                  const canAffordBoost = config.boostUpgradeId ? canAffordUpgrade(config.boostUpgradeId) : false
+                  
+                  // Pass the full worker multiplier (includes global + production + worker boost)
+                  const effectiveMultiplier = workerMultiplier.gt(1) ? workerMultiplier : undefined
+                  
                   // Skip locked workers that shouldn't be shown
                   if (!unlocked && !config.showBeforeUnlock) {
                     return null
@@ -457,6 +527,11 @@ function App() {
                       canAfford={canAfford}
                       isUnlocked={unlocked}
                       onBuy={() => handleBuyWorker(config.id)}
+                      boostLevel={boostLevel}
+                      boostCost={boostCost}
+                      canAffordBoost={canAffordBoost}
+                      onBuyBoost={config.boostUpgradeId ? () => handleBuyUpgrade(config.boostUpgradeId!) : undefined}
+                      boostMultiplier={effectiveMultiplier}
                     />
                   )
                 })}
@@ -481,11 +556,141 @@ function App() {
                       canAfford={canAfford}
                       isUnlocked={unlocked}
                       onBuy={() => handleBuyUpgrade(config.id)}
+                      isUpgradeUnlocked={isUpgradeUnlocked}
                       />
                     )
                   })}
                 </div>
               )}
+              
+              {/* Worker Synergies */}
+              {synergyUpgrades.filter(u => u.id === 'workerDevotion').some(u => isUpgradeUnlocked(u.id) || u.showBeforeUnlock) && (
+                <div className={styles.categorySection}>
+                  <h3 className={styles.categoryTitle}>⚡ Синергии</h3>
+                  {synergyUpgrades.filter(u => u.id === 'workerDevotion').map(config => {
+                    const level = getUpgradeLevel(config.id)
+                    const cost = getUpgradeCost(config.id)
+                    const unlocked = isUpgradeUnlocked(config.id)
+                    const canAfford = canAffordUpgrade(config.id)
+                    
+                    // Skip locked upgrades that shouldn't be shown
+                    if (!unlocked && !config.showBeforeUnlock) {
+                      return null
+                    }
+                    
+                    return (
+                      <UpgradeCard
+                        key={config.id}
+                        config={config}
+                        level={level}
+                        cost={cost}
+                        canAfford={canAfford}
+                        isUnlocked={unlocked}
+                        onBuy={() => handleBuyUpgrade(config.id)}
+                        isUpgradeUnlocked={isUpgradeUnlocked}
+                      />
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'global' && (
+            <div className={styles.globalSection}>
+              <div className={styles.categorySection}>
+                <h3 className={styles.categoryTitle}>Глобальные множители</h3>
+                {globalUpgrades.map(config => {
+                  const level = getUpgradeLevel(config.id)
+                  const cost = getUpgradeCost(config.id)
+                  const unlocked = isUpgradeUnlocked(config.id)
+                  const canAfford = canAffordUpgrade(config.id)
+                  
+                  // Skip locked upgrades that shouldn't be shown
+                  if (!unlocked && !config.showBeforeUnlock) {
+                    return null
+                  }
+                  
+                  return (
+                    <UpgradeCard
+                      key={config.id}
+                      config={config}
+                      level={level}
+                      cost={cost}
+                      canAfford={canAfford}
+                      isUnlocked={unlocked}
+                      onBuy={() => handleBuyUpgrade(config.id)}
+                      isUpgradeUnlocked={isUpgradeUnlocked}
+                    />
+                  )
+                })}
+              </div>
+              
+              {/* Global Synergies */}
+              {synergyUpgrades.filter(u => u.id === 'thematicPulse').some(u => isUpgradeUnlocked(u.id) || u.showBeforeUnlock) && (
+                <div className={styles.categorySection}>
+                  <h3 className={styles.categoryTitle}>⚡ Синергии</h3>
+                  {synergyUpgrades.filter(u => u.id === 'thematicPulse').map(config => {
+                    const level = getUpgradeLevel(config.id)
+                    const cost = getUpgradeCost(config.id)
+                    const unlocked = isUpgradeUnlocked(config.id)
+                    const canAfford = canAffordUpgrade(config.id)
+                    
+                    // Skip locked upgrades that shouldn't be shown
+                    if (!unlocked && !config.showBeforeUnlock) {
+                      return null
+                    }
+                    
+                    return (
+                      <UpgradeCard
+                        key={config.id}
+                        config={config}
+                        level={level}
+                        cost={cost}
+                        canAfford={canAfford}
+                        isUnlocked={unlocked}
+                        onBuy={() => handleBuyUpgrade(config.id)}
+                        isUpgradeUnlocked={isUpgradeUnlocked}
+                      />
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'offline' && (
+            <div className={styles.offlineSection}>
+              <div className={styles.categorySection}>
+                <h3 className={styles.categoryTitle}>Оффлайн & Idle система</h3>
+                <p className={styles.categoryDescription}>
+                  Усиления для оффлайн прогресса и пассивного дохода
+                </p>
+                {offlineUpgrades.map(config => {
+                  const level = getUpgradeLevel(config.id)
+                  const cost = getUpgradeCost(config.id)
+                  const unlocked = isUpgradeUnlocked(config.id)
+                  const canAfford = canAffordUpgrade(config.id)
+                  
+                  // Skip locked upgrades that shouldn't be shown
+                  if (!unlocked && !config.showBeforeUnlock) {
+                    return null
+                  }
+                  
+                  return (
+                    <UpgradeCard
+                      key={config.id}
+                      config={config}
+                      level={level}
+                      cost={cost}
+                      canAfford={canAfford}
+                      isUnlocked={unlocked}
+                      onBuy={() => handleBuyUpgrade(config.id)}
+                      isUpgradeUnlocked={isUpgradeUnlocked}
+                    />
+                  )
+                })}
+              </div>
             </div>
           )}
 

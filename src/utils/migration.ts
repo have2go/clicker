@@ -10,6 +10,29 @@ const LEGACY_STORAGE_KEY = 'clicker-game-save'
 const NEW_STORAGE_KEY = 'clicker-game-save-v2'
 
 /**
+ * Маппинг старых ID воркеров на новые
+ */
+const WORKER_ID_MIGRATION: Record<string, string> = {
+  'basic': 'miner',
+  'engineer': 'crafter',
+  'master': 'alchemist',
+  'architect': 'engineer',
+  'scientist': 'technician',
+  'overseer': 'golem',
+  'automaton': 'sentinel',
+  'crystallizer': 'ascendant',
+  'synthesizer': 'deity',
+  'transcendent': 'omniscient',
+}
+
+/**
+ * Маппинг старых ID апгрейдов на новые
+ */
+const UPGRADE_ID_MIGRATION: Record<string, string> = {
+  'criticalClick': 'criticalStrike',
+}
+
+/**
  * Проверяет наличие старого сохранения
  */
 export function hasLegacySave(): boolean {
@@ -36,7 +59,7 @@ export function migrateLegacySave(): GameState | null {
     // Создаём новое состояние
     const workers = new Map<string, number>()
     if (legacy.workers > 0) {
-      workers.set('basic', legacy.workers)
+      workers.set('miner', legacy.workers) // basic -> miner
     }
     
     const upgrades = new Map<string, number>()
@@ -117,8 +140,38 @@ export function checkAndMigrate(): GameState | null {
       // Проверяем версию
       if (parsed.version !== SAVE_VERSION) {
         console.log(`[Migration] Version mismatch: ${parsed.version} -> ${SAVE_VERSION}`)
-        // Здесь можно добавить миграции между версиями v2
-        // Пока просто возвращаем как есть
+        
+        let migrated = false
+        
+        // Миграция воркеров для версии 2 -> 3
+        if (parsed.workers && Array.isArray(parsed.workers)) {
+          parsed.workers = parsed.workers.map(([id, count]: [string, number]) => {
+            const newId = WORKER_ID_MIGRATION[id] || id
+            if (newId !== id) {
+              console.log(`[Migration] Migrating worker: ${id} -> ${newId}`)
+              migrated = true
+            }
+            return [newId, count]
+          })
+        }
+        
+        // Миграция апгрейдов для версии 3 -> 4
+        if (parsed.upgrades && Array.isArray(parsed.upgrades)) {
+          parsed.upgrades = parsed.upgrades.map(([id, level]: [string, number]) => {
+            const newId = UPGRADE_ID_MIGRATION[id] || id
+            if (newId !== id) {
+              console.log(`[Migration] Migrating upgrade: ${id} -> ${newId}`)
+              migrated = true
+            }
+            return [newId, level]
+          })
+        }
+        
+        if (migrated) {
+          parsed.version = SAVE_VERSION
+          localStorage.setItem(NEW_STORAGE_KEY, JSON.stringify(parsed))
+          console.log('[Migration] IDs migrated successfully')
+        }
       }
       
       return null // Нет нужды в миграции

@@ -8,6 +8,8 @@ import { calculateWorkerCost, calculateWorkerCps } from '../types/workers'
 import { checkUnlockRequirement } from '../types/upgrades'
 import { useMultiplierStore, syncUpgradeMultipliers } from './multiplierStore'
 import { MultiplierSource } from '../types/multipliers'
+import { GAME_BALANCE } from '../configs/economy/balance/constants'
+import { usePrestigeStore } from './prestigeStore'
 
 const STORAGE_KEY = 'clicker-game-save-v2'
 const AUTO_SAVE_INTERVAL = 30000 // 30 секунд
@@ -117,14 +119,49 @@ export const useGameStore = create<GameStore>((set, get) => {
           }
         })
         
-        // Добавляем оффлайн кристаллы
-        const offlineCrystals = offlineDelta > 0 && totalCps.gt(0)
-          ? totalCps.mul(offlineDelta / 1000)
+        // Получаем процент оффлайн прогресса из апгрейда
+        const offlineProgressLevel = state.upgrades.get('offlineProgress') || 0
+        const offlineProgressConfig = getUpgrade('offlineProgress')
+        let offlinePercentage: number = GAME_BALANCE.BASE_OFFLINE_PROGRESS_PERCENTAGE
+        
+        if (offlineProgressLevel > 0 && offlineProgressConfig) {
+          const effect = offlineProgressConfig.effect(offlineProgressLevel)
+          offlinePercentage = effect.value.toNumber()
+        }
+        
+        // Добавляем бонус от престиж-апгрейда crystallineResonance
+        const prestigeStore = usePrestigeStore.getState()
+        const crystallineResonanceLevel = prestigeStore.upgrades.get('crystallineResonance') || 0
+        if (crystallineResonanceLevel > 0) {
+          // +50% за уровень
+          offlinePercentage = Math.min(
+            offlinePercentage * (1 + crystallineResonanceLevel * 0.5),
+            GAME_BALANCE.MAX_OFFLINE_PROGRESS_PERCENTAGE
+          )
+        }
+        
+        // Добавляем бонус от престиж-апгрейда timeWarp
+        const timeWarpLevel = prestigeStore.upgrades.get('timeWarp') || 0
+        let offlineSpeedMultiplier = 1
+        if (timeWarpLevel > 0) {
+          // +25% скорости за уровень
+          offlineSpeedMultiplier = 1 + timeWarpLevel * 0.25
+        }
+        
+        // Ограничиваем максимальное время оффлайн прогресса
+        const maxOfflineMs = GAME_BALANCE.MAX_OFFLINE_HOURS * 60 * 60 * 1000
+        const effectiveOfflineDelta = Math.min(offlineDelta, maxOfflineMs)
+        
+        // Добавляем оффлайн кристаллы с учётом процента и скорости
+        const offlineCrystals = effectiveOfflineDelta > 0 && totalCps.gt(0)
+          ? totalCps.mul(effectiveOfflineDelta / 1000).mul(offlinePercentage).mul(offlineSpeedMultiplier)
           : D(0)
         
         console.log('[Load] Offline progress:', {
-          offlineTime: offlineDelta / 1000,
+          offlineTime: effectiveOfflineDelta / 1000,
           cps: totalCps.toString(),
+          offlinePercentage: offlinePercentage,
+          offlineSpeedMultiplier: offlineSpeedMultiplier,
           earned: offlineCrystals.toString(),
         })
         
@@ -200,12 +237,18 @@ export const useGameStore = create<GameStore>((set, get) => {
       }
     })
     
-    // Добавляем автокликер
+    // Добавляем автокликер (из категории OFFLINE)
     const autoClickerLevel = state.upgrades.get('autoClicker') || 0
     if (autoClickerLevel > 0) {
       const clickMultiplier = multiplierStore.getClickMultiplier()
       const autoClickValue = baseClick.mul(clickMultiplier).mul(autoClickerLevel)
       totalCps = totalCps.add(autoClickValue)
+    }
+    
+    // Добавляем пассивные кристаллы (независимо от воркеров)
+    const passiveCrystalsLevel = state.upgrades.get('passiveCrystals') || 0
+    if (passiveCrystalsLevel > 0) {
+      totalCps = totalCps.add(D(passiveCrystalsLevel))
     }
     
     set({ totalCps, baseClickValue: baseClick })
@@ -261,12 +304,11 @@ export const useGameStore = create<GameStore>((set, get) => {
       const clickMultiplier = multiplierStore.getClickMultiplier()
       const clickValue = state.baseClickValue.mul(clickMultiplier)
       
-      // Проверка критического удара
-      const critLevel = state.upgrades.get('criticalClick') || 0
-      const critChance = critLevel * 0.05
-      const isCrit = Math.random() < critChance
+      // Проверка критического удара (бонус к урону)
+      const critLevel = state.upgrades.get('criticalStrike') || 0
+      const critBonus = critLevel * 0.05 // +5% за уровень
       
-      const finalValue = isCrit ? clickValue.mul(2) : clickValue
+      const finalValue = clickValue.mul(1 + critBonus)
       
       set({
         crystals: state.crystals.add(finalValue),
@@ -404,8 +446,20 @@ export const useGameStore = create<GameStore>((set, get) => {
     recalculateStats,
     
     reset: () => {
+      // Проверяем престиж-апгрейд autoProgress
+      const prestigeStore = usePrestigeStore.getState()
+      const autoProgressLevel = prestigeStore.upgrades.get('autoProgress') || 0
+      
+      // Начальные воркеры от autoProgress
+      const initialWorkers = new Map<string, number>()
+      if (autoProgressLevel > 0) {
+        // Даём 10 базовых воркеров (basic)
+        initialWorkers.set('basic', 10)
+      }
+      
       set({
         ...initialState,
+        workers: initialWorkers,
         lastUpdate: Date.now(),
       })
       

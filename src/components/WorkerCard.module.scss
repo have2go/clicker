@@ -30,6 +30,27 @@
     opacity: 0.6;
     filter: grayscale(0.5);
   }
+  
+  &.boostMode {
+    border-color: rgba(76, 175, 80, 0.5);
+    background: linear-gradient(135deg, rgba(76, 175, 80, 0.15), rgba(76, 175, 80, 0.08));
+  }
+}
+
+// Режимы просмотра
+.workerMode,
+.boostMode {
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  
+  &.hidden {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(-20px);
+  }
 }
 
 .header {
@@ -76,6 +97,12 @@
   border-radius: 8px;
 }
 
+.valueContainer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .label {
   font-size: 11px;
   color: rgba(255, 255, 255, 0.6);
@@ -88,6 +115,37 @@
   font-size: 14px;
   color: #4CAF50;
   font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+.boostMultiplierBadge {
+  display: inline-block;
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.3), rgba(76, 175, 80, 0.2));
+  border: 1px solid rgba(76, 175, 80, 0.4);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #4CAF50;
+  font-variant-numeric: tabular-nums;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.boostedValue {
+  font-size: 12px;
+  color: #66BB6A;
+  font-weight: 700;
+  margin-top: 2px;
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum";
 }
@@ -163,5 +221,146 @@
   color: #FFC107;
   font-size: 14px;
   font-weight: 500;
+}
+
+.boostInfo {
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  background: rgba(76, 175, 80, 0.1);
+  border: 1px solid rgba(76, 175, 80, 0.3);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  
+  &.clickable {
+    cursor: pointer;
+    
+    &:hover {
+      background: rgba(76, 175, 80, 0.15);
+      border-color: rgba(76, 175, 80, 0.5);
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(76, 175, 80, 0.2);
+    }
+    
+    &:active {
+      transform: translateY(0);
+    }
+  }
+}
+
+.boostLabel {
+  font-size: 12px;
+  color: rgba(76, 175, 80, 0.9);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.boostLevelBadge {
+  display: inline-block;
+  background: rgba(76, 175, 80, 0.3);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #4CAF50;
+  margin-left: 4px;
+}
+
+.boostHint {
+  font-size: 10px;
+  color: rgba(255, 193, 7, 0.9);
+  margin-top: 4px;
+  font-weight: 500;
+}
+
+.boostActive {
+  font-size: 11px;
+  color: #4CAF50;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.boostInactive {
+  font-size: 11px;
+  color: rgba(255, 193, 7, 0.9);
+  font-weight: 500;
+  margin-top: 4px;
+}
+
+// Режим буста
+.boostHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.backButton {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+  
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+.boostTitle {
+  flex: 1;
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.boostDescription {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.5;
+  margin-bottom: 16px;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+}
+
+.boostStats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.boostStatItem {
+  padding: 10px 12px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  
+  .label {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.6);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+  }
+  
+  .value {
+    font-size: 16px;
+    color: #4CAF50;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+  }
 }
 

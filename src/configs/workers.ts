@@ -1,10 +1,10 @@
 import type { WorkerConfig } from '../types/workers'
-import { WORKERS_ECONOMY } from './economy/balance'
+import { WORKERS_ECONOMY } from './economy'
 
 /**
  * Все типы воркеров в игре
  * 
- * ВАЖНО: Экономические параметры (цены, CPS, рост) находятся в economy/balance.ts
+ * ВАЖНО: Экономические параметры (цены, CPS, рост) находятся в economy/balance/
  * Здесь только контент: названия, описания, иконки, UI параметры
  */
 
@@ -13,135 +13,145 @@ export const WORKERS: Record<string, WorkerConfig> = {
   // БАЗОВЫЕ ВОРКЕРЫ
   // ============================================
   
-  basic: {
-    id: 'basic',
-    name: 'Рабочий',
-    description: 'Базовый рабочий, добывает небольшое количество кристаллов',
-    icon: '👷',
+  miner: {
+    id: 'miner',
+    name: 'Шахтёр',
+    description: 'Добывает кристаллы из глубин земли',
+    icon: '⛏️',
     order: 1,
     color: '#8B7355',
-    // Экономика из balance.ts
-    ...WORKERS_ECONOMY.basic,
+    boostUpgradeId: 'minerBoost',
+    // Экономика из economy/balance/workers.ts
+    ...WORKERS_ECONOMY.miner,
   },
   
-  engineer: {
-    id: 'engineer',
-    name: 'Инженер',
-    description: 'Опытный специалист с улучшенной производительностью',
-    icon: '👨‍🔧',
+  crafter: {
+    id: 'crafter',
+    name: 'Ремесленник',
+    description: 'Обрабатывает сырые кристаллы, увеличивая их ценность',
+    icon: '🔨',
     order: 2,
-    color: '#4169E1',
+    color: '#CD853F',
     showBeforeUnlock: true,
-    // Экономика из balance.ts
-    ...WORKERS_ECONOMY.engineer,
+    boostUpgradeId: 'crafterBoost',
+    // Экономика из economy/balance/workers.ts
+    ...WORKERS_ECONOMY.crafter,
   },
   
-  master: {
-    id: 'master',
-    name: 'Мастер',
-    description: 'Высококвалифицированный работник',
-    icon: '👨‍🏭',
+  alchemist: {
+    id: 'alchemist',
+    name: 'Алхимик',
+    description: 'Превращает обычные материалы в драгоценные кристаллы',
+    icon: '⚗️',
     order: 3,
     color: '#9370DB',
     showBeforeUnlock: true,
-    // Экономика из balance.ts
-    ...WORKERS_ECONOMY.master,
+    boostUpgradeId: 'alchemistBoost',
+    // Экономика из economy/balance/workers.ts
+    ...WORKERS_ECONOMY.alchemist,
   },
   
   // ============================================
   // ПРОДВИНУТЫЕ ВОРКЕРЫ
   // ============================================
   
-  architect: {
-    id: 'architect',
-    name: 'Архитектор',
-    description: 'Проектирует эффективные системы добычи',
-    icon: '👨‍💼',
+  engineer: {
+    id: 'engineer',
+    name: 'Инженер',
+    description: 'Создаёт механизмы для автоматизации добычи',
+    icon: '👨‍🔧',
     order: 4,
-    color: '#FFD700',
+    color: '#4169E1',
     showBeforeUnlock: true,
-    // Экономика из balance.ts
-    ...WORKERS_ECONOMY.architect,
+    boostUpgradeId: 'engineerBoost',
+    // Экономика из economy/balance/workers.ts
+    ...WORKERS_ECONOMY.engineer,
   },
   
-  scientist: {
-    id: 'scientist',
-    name: 'Учёный',
-    description: 'Использует научные методы для оптимизации добычи',
-    icon: '👨‍🔬',
+  technician: {
+    id: 'technician',
+    name: 'Техник',
+    description: 'Управляет сложными технологическими системами',
+    icon: '🔧',
     order: 5,
     color: '#00CED1',
     showBeforeUnlock: true,
-    // Экономика из balance.ts
-    ...WORKERS_ECONOMY.scientist,
+    boostUpgradeId: 'technicianBoost',
+    // Экономика из economy/balance/workers.ts
+    ...WORKERS_ECONOMY.technician,
   },
   
   // ============================================
   // ЭЛИТНЫЕ ВОРКЕРЫ
   // ============================================
   
-  overseer: {
-    id: 'overseer',
-    name: 'Надзиратель',
-    description: 'Координирует работу всех остальных',
-    icon: '👑',
+  golem: {
+    id: 'golem',
+    name: 'Голем',
+    description: 'Магическое существо невероятной силы и выносливости',
+    icon: '🗿',
     order: 6,
-    color: '#DC143C',
-    showBeforeUnlock: true,
-    // Экономика из balance.ts
-    ...WORKERS_ECONOMY.overseer,
-  },
-  
-  automaton: {
-    id: 'automaton',
-    name: 'Автоматон',
-    description: 'Полностью автоматизированная добывающая машина',
-    icon: '🤖',
-    order: 7,
     color: '#708090',
     showBeforeUnlock: true,
-    // Экономика из balance.ts
-    ...WORKERS_ECONOMY.automaton,
+    boostUpgradeId: 'golemBoost',
+    // Экономика из economy/balance/workers.ts
+    ...WORKERS_ECONOMY.golem,
+  },
+  
+  sentinel: {
+    id: 'sentinel',
+    name: 'Страж',
+    description: 'Древний хранитель кристальных месторождений',
+    icon: '🛡️',
+    order: 7,
+    color: '#DC143C',
+    showBeforeUnlock: true,
+    boostUpgradeId: 'sentinelBoost',
+    // Экономика из economy/balance/workers.ts
+    ...WORKERS_ECONOMY.sentinel,
   },
   
   // ============================================
   // МИФИЧЕСКИЕ ВОРКЕРЫ
   // ============================================
   
-  crystallizer: {
-    id: 'crystallizer',
-    name: 'Кристаллизатор',
-    description: 'Создаёт кристаллы из чистой энергии',
-    icon: '💎',
+  ascendant: {
+    id: 'ascendant',
+    name: 'Вознёсшийся',
+    description: 'Существо, превзошедшее смертные ограничения',
+    icon: '👼',
     order: 8,
+    color: '#FFD700',
+    showBeforeUnlock: false,
+    boostUpgradeId: 'ascendantBoost',
+    // Экономика из economy/balance/workers.ts
+    ...WORKERS_ECONOMY.ascendant,
+  },
+  
+  deity: {
+    id: 'deity',
+    name: 'Божество',
+    description: 'Бог кристаллов, черпающий энергию из самого мироздания',
+    icon: '⚡',
+    order: 9,
     color: '#FF1493',
     showBeforeUnlock: false,
-    // Экономика из balance.ts
-    ...WORKERS_ECONOMY.crystallizer,
+    boostUpgradeId: 'deityBoost',
+    // Экономика из economy/balance/workers.ts
+    ...WORKERS_ECONOMY.deity,
   },
   
-  synthesizer: {
-    id: 'synthesizer',
-    name: 'Синтезатор',
-    description: 'Синтезирует кристаллы на квантовом уровне',
-    icon: '✨',
-    order: 9,
+  omniscient: {
+    id: 'omniscient',
+    name: 'Всезнающий',
+    description: 'Высшая сущность, познавшая все тайны кристаллов',
+    icon: '🌌',
+    order: 10,
     color: '#8A2BE2',
     showBeforeUnlock: false,
-    // Экономика из balance.ts
-    ...WORKERS_ECONOMY.synthesizer,
-  },
-  
-  transcendent: {
-    id: 'transcendent',
-    name: 'Трансцендент',
-    description: 'Превосходит все известные границы производства',
-    icon: '🌟',
-    order: 10,
-    color: '#FF6347',
-    showBeforeUnlock: false,
-    // Экономика из balance.ts
-    ...WORKERS_ECONOMY.transcendent,
+    boostUpgradeId: 'omniscientBoost',
+    // Экономика из economy/balance/workers.ts
+    ...WORKERS_ECONOMY.omniscient,
   },
 }
 

@@ -1,7 +1,7 @@
 import { memo } from 'react'
 import { Decimal } from '../utils/bigNumber'
 import { formatNumber } from '../utils/numberFormatter'
-import { getAllPrestigeUpgrades } from '../configs/prestige'
+import { getAllPrestigeUpgrades, PRESTIGE_CONFIG } from '../configs/prestige'
 import styles from './PrestigePanel.module.scss'
 
 interface PrestigePanelProps {
@@ -70,7 +70,7 @@ export const PrestigePanel = memo(function PrestigePanel({
           </>
         ) : (
           <div className={styles.requirement}>
-            Требуется: {formatNumber(new Decimal(1e6))} Cr
+            Требуется: {formatNumber(PRESTIGE_CONFIG.minCrystalsForPrestige)} Cr
           </div>
         )}
       </div>

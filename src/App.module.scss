@@ -160,10 +160,23 @@ $secondaryTextOpacity: 0.8;
   padding: 0.25rem;
   background: rgba(255, 255, 255, 0.05);
   border-radius: 8px;
+  overflow-x: auto; // Включаем горизонтальный скролл
+  overflow-y: hidden;
+  
+  // Hide scrollbar (keep scroll working)
+  scrollbar-width: none; // Firefox
+  -ms-overflow-style: none; // IE/Legacy Edge
+
+  &::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none; // Chrome/Safari/Edge
+  }
 }
 
 .tab {
-  flex: 1;
+  flex: 0 0 auto; // Не сжимаем табы, позволяем им иметь естественную ширину
+  min-width: fit-content; // Минимальная ширина по содержимому
   padding: 0.75rem 1rem;
   border: none;
   border-radius: 6px;
@@ -173,6 +186,7 @@ $secondaryTextOpacity: 0.8;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
+  white-space: nowrap; // Запрещаем перенос текста
   -webkit-tap-highlight-color: transparent; // Убираем синюю подсветку
 
   &:hover {
@@ -287,7 +301,14 @@ $secondaryTextOpacity: 0.8;
 }
 
 .upgradesSection,
-.passiveSection {
+.passiveSection,
+.globalSection {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.offlineSection {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
@@ -306,6 +327,13 @@ $secondaryTextOpacity: 0.8;
   color: #fff;
   padding-bottom: 0.5rem;
   border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.categoryDescription {
+  margin: 0.5rem 0 0.75rem 0;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.4;
 }
 
 // Адаптация для маленьких экранов

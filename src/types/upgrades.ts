@@ -20,6 +20,10 @@ export const UpgradeCategory = {
   PASSIVE: 'passive',   // Пассивные апгрейды (производство)
   UTILITY: 'utility',   // Утилиты (автоматизация)
   SPECIAL: 'special',   // Специальные
+  WORKER_BOOST: 'worker_boost', // Бусты воркеров (встроены в карточки)
+  GLOBAL: 'global',     // Глобальные множители
+  OFFLINE: 'offline',   // Оффлайн и idle система
+  SYNERGY: 'synergy',   // Синергии между системами
 } as const
 
 export type UpgradeCategory = typeof UpgradeCategory[keyof typeof UpgradeCategory]
@@ -28,10 +32,18 @@ export type UpgradeCategory = typeof UpgradeCategory[keyof typeof UpgradeCategor
  * Требования для разблокировки
  */
 export interface UnlockRequirement {
-  type: 'crystals' | 'worker' | 'upgrade' | 'prestige'
+  type: 'crystals' | 'worker' | 'upgrade' | 'prestige' | 'upgrades_count' | 'category_upgrades'
   targetId?: string
   amount?: Decimal
   level?: number
+  // Для upgrades_count: минимальное количество купленных апгрейдов
+  count?: number
+  // Для category_upgrades: категория апгрейдов для подсчета
+  category?: string
+  // Для сложных требований: список ID апгрейдов для проверки
+  upgradeIds?: string[]
+  // Минимальные уровни для upgradeIds
+  minLevels?: number[]
 }
 
 /**
@@ -140,6 +152,43 @@ export function checkUnlockRequirement(
       return requirement.level 
         ? gameState.prestigeLevel >= requirement.level
         : gameState.prestigeLevel > 0
+    
+    case 'upgrades_count': {
+      // Подсчитываем общее количество купленных апгрейдов
+      let totalPurchased = 0
+      gameState.upgrades.forEach((level) => {
+        if (level > 0) totalPurchased++
+      })
+      return requirement.count ? totalPurchased >= requirement.count : false
+    }
+    
+    case 'category_upgrades': {
+      // Подсчитываем апгрейды из конкретной категории
+      // Примечание: для этого требуется доступ к UPGRADES конфигу
+      // Пока упрощаем - проверяем список upgradeIds если есть
+      if (requirement.upgradeIds && requirement.minLevels) {
+        for (let i = 0; i < requirement.upgradeIds.length; i++) {
+          const upgradeId = requirement.upgradeIds[i]
+          const minLevel = requirement.minLevels[i] || 1
+          const currentLevel = gameState.upgrades.get(upgradeId) || 0
+          if (currentLevel < minLevel) {
+            return false
+          }
+        }
+        return true
+      }
+      // Если указаны только upgradeIds без minLevels - проверяем что все куплены (level > 0)
+      if (requirement.upgradeIds) {
+        for (const upgradeId of requirement.upgradeIds) {
+          const currentLevel = gameState.upgrades.get(upgradeId) || 0
+          if (currentLevel === 0) {
+            return false
+          }
+        }
+        return true
+      }
+      return false
+    }
         
     default:
       return false
