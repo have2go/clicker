@@ -92,27 +92,22 @@ import { exportBalanceForAnalysis } from './economy'
 
 // Получить все данные в JSON-friendly формате
 const data = exportBalanceForAnalysis()
-
-// Пример структуры:
-{
-  workers: [
-    {
-      id: 'basic',
-      baseCost: '25',
-      costGrowth: 1.15,
-      baseCps: '0.1',
-      cost_level_10: '91.33',
-      cost_level_50: '1636.65',
-    },
-    // ...
-  ],
-  upgrades: [...],
-  prestige: {...}
-}
 ```
 
+Или использовать встроенный скрипт:
+```bash
+npm run export-balance
+```
+
+Создаётся файл `game_balance.xlsx` с 5 листами:
+- **Summary** - сводка и константы
+- **Workers** - все воркеры
+- **Upgrades** - все апгрейды
+- **Prestige Progression** - прогрессия престижа
+- **Prestige Upgrades** - престиж-апгрейды
+
 Эти данные можно:
-- Скопировать в Excel для анализа
+- Открыть в Excel/LibreOffice/Google Sheets
 - Использовать в балансировочных калькуляторах
 - Строить графики прогрессии
 - Симулировать игровые сессии

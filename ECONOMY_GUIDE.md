@@ -95,7 +95,7 @@ export const PRESTIGE_ECONOMY = {
 }
 ```
 
-## 📊 Экспорт в CSV для анализа
+## 📊 Экспорт в Excel для анализа
 
 ### Использование:
 ```bash
@@ -103,21 +103,31 @@ npm run export-balance
 ```
 
 ### Результат:
-Создаются 3 CSV файла:
-- `balance_workers.csv` - все данные воркеров
-- `balance_upgrades.csv` - все данные апгрейдов
-- `balance_prestige.csv` - прогрессия престижа
+Создаётся один Excel файл `game_balance.xlsx` с 5 листами:
+
+1. **Summary** - общая информация и константы игры
+2. **Workers** - все данные воркеров с расчётами
+3. **Upgrades** - все данные апгрейдов
+4. **Prestige Progression** - прогрессия престижа от 1M до 100B
+5. **Prestige Upgrades** - престиж-апгрейды с эффектами
 
 ### Что включено:
 
-**Workers CSV:**
+**Summary (Сводка):**
+- Общее количество воркеров, апгрейдов
+- Константы игры (клик, автосохранение, оффлайн)
+- Престиж конфигурация
+- Статистика эффективности воркеров
+- Статистика апгрейдов
+
+**Workers (Воркеры):**
 - Base Cost, Cost Growth, Base CPS
 - CPS/Cost Ratio (эффективность)
 - Cost на уровнях 10, 25, 50, 100
 - Total Cost до уровней 10, 25, 50, 100
 - Unlock requirements
 
-**Upgrades CSV:**
+**Upgrades (Апгрейды):**
 - Base Cost, Cost Growth
 - Effect Type & Target
 - Cost на уровнях 1, 5, 10, 20
@@ -125,15 +135,20 @@ npm run export-balance
 - Effect на уровнях 1, 5, 10, 20
 - Unlock requirements
 
-**Prestige CSV:**
+**Prestige Progression (Прогрессия престижа):**
 - Прогрессия награды от 1M до 100B кристаллов
 - Глобальные множители
-- Престиж-апгрейды с эффектами
+- Бонусы в процентах
 
-### Открыть в Excel/Google Sheets:
+**Prestige Upgrades (Престиж-апгрейды):**
+- Стоимости и эффекты
+- Максимальные уровни
+
+### Открыть в Excel/LibreOffice/Google Sheets:
 1. Запустить `npm run export-balance`
-2. Открыть CSV файлы
-3. Анализировать, строить графики, находить дисбалансы
+2. Открыть файл `game_balance.xlsx`
+3. Переключаться между листами для анализа
+4. Строить графики, применять фильтры, находить дисбалансы
 
 ## 🛠️ Как использовать
 
@@ -203,8 +218,8 @@ console.log(effect.toString()) // "9.31" (x9.31 множитель)
 
 ```bash
 npm run export-balance
-# Открыть balance_*.csv в Excel
-# Построить графики, найти проблемы баланса
+# Открыть game_balance.xlsx в Excel
+# Переключаться между листами, построить графики
 ```
 
 ## 📈 Файл progression.md
@@ -233,11 +248,12 @@ npm run export-balance
 ## 🎓 Workflow балансировки
 
 1. **Изменить** числа в `balance.ts`
-2. **Экспортировать** CSV: `npm run export-balance`
-3. **Открыть** CSV в Excel, построить графики
-4. **Обновить** анализ в `progression.md` (опционально)
-5. **Тестировать** в игре: `npm run dev`
-6. **Повторить** до идеального баланса
+2. **Экспортировать** Excel: `npm run export-balance`
+3. **Открыть** `game_balance.xlsx`, изучить листы
+4. **Построить** графики в Excel
+5. **Обновить** анализ в `progression.md` (опционально)
+6. **Тестировать** в игре: `npm run dev`
+7. **Повторить** до идеального баланса
 
 ## ✅ Преимущества новой структуры
 
@@ -263,7 +279,7 @@ import { WORKERS_ECONOMY } from './economy/balance_hard'
 ```
 
 ### 4. Внешний анализ
-- Экспорт в CSV
+- Экспорт в Excel (5 листов с данными)
 - Анализ в Excel/Python
 - Симуляторы прогрессии
 - Автоматизированное тестирование
@@ -288,7 +304,8 @@ console.log(efficiencies.sort((a, b) => b.efficiency - a.efficiency))
 ### Построить кривую роста стоимости:
 ```bash
 npm run export-balance
-# В Excel: выделить колонки "Cost Level 10/25/50/100"
+# В Excel: открыть лист Workers
+# Выделить колонки "Cost Level 10/25/50/100"
 # Вставка → График → Линейный график
 ```
 
@@ -315,7 +332,10 @@ cat src/configs/economy/balance.ts
 # 2. Экспортировать для анализа
 npm run export-balance
 
-# 3. Открыть CSV в Excel/Google Sheets
+# 3. Открыть Excel файл
+open game_balance.xlsx  # macOS
+# или
+start game_balance.xlsx  # Windows
 
 # 4. Изменить баланс
 nano src/configs/economy/balance.ts
@@ -327,3 +347,5 @@ npm run dev
 ---
 
 **Все экономические изменения теперь в одном месте: `src/configs/economy/balance.ts`** 🎯
+
+**Все данные экспортируются в один Excel файл: `game_balance.xlsx` с 5 листами** 📊

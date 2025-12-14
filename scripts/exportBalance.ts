@@ -1,49 +1,36 @@
 /**
- * Скрипт для экспорта экономики игры в CSV формат
+ * Скрипт для экспорта экономики игры в Excel формат
  * 
  * Использование:
  *   npx tsx scripts/exportBalance.ts
  * 
- * Создаёт файлы:
- *   - balance_workers.csv
- *   - balance_upgrades.csv
- *   - balance_prestige.csv
+ * Создаёт файл:
+ *   - game_balance.xlsx (с несколькими листами)
  */
 
 import { writeFileSync } from 'fs'
 import { join } from 'path'
+import * as XLSX from 'xlsx'
 import { D } from '../src/utils/bigNumber'
 import {
   WORKERS_ECONOMY,
   UPGRADES_ECONOMY,
   PRESTIGE_ECONOMY,
   PRESTIGE_UPGRADES_ECONOMY,
+  GAME_BALANCE,
   calculateWorkerCostToLevel,
   calculateUpgradeCostToLevel,
 } from '../src/configs/economy/balance'
 
 // ============================================
-// CSV Generation helpers
+// Workers Sheet
 // ============================================
 
-function escapeCSV(value: string | number): string {
-  const str = String(value)
-  if (str.includes(',') || str.includes('"') || str.includes('\n')) {
-    return `"${str.replace(/"/g, '""')}"`
-  }
-  return str
-}
-
-function arrayToCSV(rows: string[][]): string {
-  return rows.map(row => row.map(escapeCSV).join(',')).join('\n')
-}
-
-// ============================================
-// Workers Export
-// ============================================
-
-function exportWorkers(): string {
-  const headers = [
+function createWorkersSheet() {
+  const data = []
+  
+  // Заголовки
+  data.push([
     'ID',
     'Base Cost',
     'Cost Growth',
@@ -60,44 +47,46 @@ function exportWorkers(): string {
     'Unlock Type',
     'Unlock Target',
     'Unlock Level',
-  ]
+  ])
 
-  const rows = [headers]
-
+  // Данные
   for (const [id, eco] of Object.entries(WORKERS_ECONOMY)) {
     const baseCost = eco.baseCost.toNumber()
     const baseCps = eco.baseCps.toNumber()
     const ratio = baseCps / baseCost
 
-    rows.push([
+    data.push([
       id,
-      eco.baseCost.toString(),
-      eco.costGrowth.toString(),
-      eco.baseCps.toString(),
-      ratio.toFixed(6),
-      eco.baseCost.mul(Math.pow(eco.costGrowth, 9)).toString(),
-      eco.baseCost.mul(Math.pow(eco.costGrowth, 24)).toString(),
-      eco.baseCost.mul(Math.pow(eco.costGrowth, 49)).toString(),
-      eco.baseCost.mul(Math.pow(eco.costGrowth, 99)).toString(),
-      calculateWorkerCostToLevel(id, 0, 10).toString(),
-      calculateWorkerCostToLevel(id, 0, 25).toString(),
-      calculateWorkerCostToLevel(id, 0, 50).toString(),
-      calculateWorkerCostToLevel(id, 0, 100).toString(),
+      parseFloat(eco.baseCost.toString()),
+      eco.costGrowth,
+      parseFloat(eco.baseCps.toString()),
+      parseFloat(ratio.toFixed(6)),
+      parseFloat(eco.baseCost.mul(Math.pow(eco.costGrowth, 9)).toString()),
+      parseFloat(eco.baseCost.mul(Math.pow(eco.costGrowth, 24)).toString()),
+      parseFloat(eco.baseCost.mul(Math.pow(eco.costGrowth, 49)).toString()),
+      parseFloat(eco.baseCost.mul(Math.pow(eco.costGrowth, 99)).toString()),
+      parseFloat(calculateWorkerCostToLevel(id, 0, 10).toString()),
+      parseFloat(calculateWorkerCostToLevel(id, 0, 25).toString()),
+      parseFloat(calculateWorkerCostToLevel(id, 0, 50).toString()),
+      parseFloat(calculateWorkerCostToLevel(id, 0, 100).toString()),
       eco.unlockRequirement?.type || 'none',
       eco.unlockRequirement?.targetId || '',
       eco.unlockRequirement?.level?.toString() || '',
     ])
   }
 
-  return arrayToCSV(rows)
+  return XLSX.utils.aoa_to_sheet(data)
 }
 
 // ============================================
-// Upgrades Export
+// Upgrades Sheet
 // ============================================
 
-function exportUpgrades(): string {
-  const headers = [
+function createUpgradesSheet() {
+  const data = []
+  
+  // Заголовки
+  data.push([
     'ID',
     'Base Cost',
     'Cost Growth',
@@ -117,50 +106,50 @@ function exportUpgrades(): string {
     'Effect Level 20',
     'Unlock Type',
     'Unlock Target',
-  ]
+  ])
 
-  const rows = [headers]
-
+  // Данные
   for (const [id, eco] of Object.entries(UPGRADES_ECONOMY)) {
-    rows.push([
+    data.push([
       id,
-      eco.baseCost.toString(),
-      eco.costGrowth.toString(),
+      parseFloat(eco.baseCost.toString()),
+      eco.costGrowth,
       eco.effectType,
       eco.effectTarget,
-      eco.maxLevel?.toString() || 'unlimited',
-      eco.baseCost.toString(),
-      eco.baseCost.mul(Math.pow(eco.costGrowth, 4)).toString(),
-      eco.baseCost.mul(Math.pow(eco.costGrowth, 9)).toString(),
-      eco.baseCost.mul(Math.pow(eco.costGrowth, 19)).toString(),
-      calculateUpgradeCostToLevel(id, 0, 5).toString(),
-      calculateUpgradeCostToLevel(id, 0, 10).toString(),
-      calculateUpgradeCostToLevel(id, 0, 20).toString(),
-      eco.effectFormula(1).toString(),
-      eco.effectFormula(5).toString(),
-      eco.effectFormula(10).toString(),
-      eco.effectFormula(20).toString(),
+      eco.maxLevel || 'unlimited',
+      parseFloat(eco.baseCost.toString()),
+      parseFloat(eco.baseCost.mul(Math.pow(eco.costGrowth, 4)).toString()),
+      parseFloat(eco.baseCost.mul(Math.pow(eco.costGrowth, 9)).toString()),
+      parseFloat(eco.baseCost.mul(Math.pow(eco.costGrowth, 19)).toString()),
+      parseFloat(calculateUpgradeCostToLevel(id, 0, 5).toString()),
+      parseFloat(calculateUpgradeCostToLevel(id, 0, 10).toString()),
+      parseFloat(calculateUpgradeCostToLevel(id, 0, 20).toString()),
+      parseFloat(eco.effectFormula(1).toString()),
+      parseFloat(eco.effectFormula(5).toString()),
+      parseFloat(eco.effectFormula(10).toString()),
+      parseFloat(eco.effectFormula(20).toString()),
       eco.unlockRequirement?.type || 'none',
       eco.unlockRequirement?.targetId || eco.unlockRequirement?.amount?.toString() || '',
     ])
   }
 
-  return arrayToCSV(rows)
+  return XLSX.utils.aoa_to_sheet(data)
 }
 
 // ============================================
-// Prestige Export
+// Prestige Progression Sheet
 // ============================================
 
-function exportPrestige(): string {
-  const headers = [
+function createPrestigeProgressionSheet() {
+  const data = []
+  
+  // Заголовки
+  data.push([
     'Crystals',
     'Prestige Reward',
     'Global Multiplier',
     'Total Bonus %',
-  ]
-
-  const rows = [headers]
+  ])
 
   // Примеры прогрессии
   const milestones = [
@@ -175,45 +164,119 @@ function exportPrestige(): string {
     const multiplier = PRESTIGE_ECONOMY.currencyMultiplierFormula(reward)
     const bonus = multiplier.sub(1).mul(100)
 
-    rows.push([
-      crystals.toExponential(2),
-      reward.toString(),
-      multiplier.toString(),
-      bonus.toString(),
+    data.push([
+      crystals,
+      parseFloat(reward.toString()),
+      parseFloat(multiplier.toString()),
+      parseFloat(bonus.toString()),
     ])
   }
 
-  // Престиж-апгрейды
-  const upgradeHeaders = [
-    '',
+  return XLSX.utils.aoa_to_sheet(data)
+}
+
+// ============================================
+// Prestige Upgrades Sheet
+// ============================================
+
+function createPrestigeUpgradesSheet() {
+  const data = []
+  
+  // Заголовки
+  data.push([
     'ID',
     'Cost',
     'Effect Type',
     'Target',
     'Max Level',
-    'Effect L1',
-    'Effect L5',
-    'Effect L10',
-  ]
+    'Effect Level 1',
+    'Effect Level 5',
+    'Effect Level 10',
+  ])
 
-  rows.push([]) // пустая строка
-  rows.push(upgradeHeaders)
-
+  // Данные
   for (const [id, eco] of Object.entries(PRESTIGE_UPGRADES_ECONOMY)) {
-    rows.push([
-      '',
+    data.push([
       id,
-      eco.cost.toString(),
+      parseFloat(eco.cost.toString()),
       eco.effectType,
       eco.effectTarget || 'special',
-      eco.maxLevel?.toString() || 'unlimited',
-      eco.effectFormula(1).toString(),
-      eco.effectFormula(5).toString(),
-      eco.effectFormula(10).toString(),
+      eco.maxLevel || 'unlimited',
+      parseFloat(eco.effectFormula(1).toString()),
+      parseFloat(eco.effectFormula(5).toString()),
+      parseFloat(eco.effectFormula(10).toString()),
     ])
   }
 
-  return arrayToCSV(rows)
+  return XLSX.utils.aoa_to_sheet(data)
+}
+
+// ============================================
+// Summary Sheet
+// ============================================
+
+function createSummarySheet() {
+  const data = []
+  
+  // Общая информация
+  data.push(['GAME BALANCE SUMMARY'])
+  data.push([])
+  
+  data.push(['Category', 'Count', 'Details'])
+  data.push(['Workers', Object.keys(WORKERS_ECONOMY).length, 'Воркеры для производства кристаллов'])
+  data.push(['Upgrades', Object.keys(UPGRADES_ECONOMY).length, 'Апгрейды для усиления'])
+  data.push(['Prestige Upgrades', Object.keys(PRESTIGE_UPGRADES_ECONOMY).length, 'Престиж-апгрейды'])
+  data.push([])
+  
+  // Константы игры
+  data.push(['GAME CONSTANTS'])
+  data.push([])
+  data.push(['Parameter', 'Value', 'Description'])
+  data.push(['Base Click Power', parseFloat(GAME_BALANCE.BASE_CLICK_POWER.toString()), 'Базовая сила клика'])
+  data.push(['Auto Save Interval', GAME_BALANCE.AUTO_SAVE_INTERVAL, 'Интервал автосохранения (мс)'])
+  data.push(['Max Offline Hours', GAME_BALANCE.MAX_OFFLINE_HOURS, 'Максимум оффлайн прогресса (часы)'])
+  data.push(['Offline Progress %', GAME_BALANCE.OFFLINE_PROGRESS_PERCENTAGE * 100, 'Процент оффлайн прогресса'])
+  data.push([])
+  
+  // Престиж конфиг
+  data.push(['PRESTIGE CONFIG'])
+  data.push([])
+  data.push(['Parameter', 'Value'])
+  data.push(['Min Crystals Required', parseFloat(PRESTIGE_ECONOMY.minCrystalsRequired.toString())])
+  data.push(['Formula', 'sqrt(totalCrystals / 1M)'])
+  data.push(['Currency Multiplier', '1 + (currency * 0.1)'])
+  data.push([])
+  
+  // Статистика воркеров
+  data.push(['WORKERS STATISTICS'])
+  data.push([])
+  data.push(['Worker', 'Base Cost', 'Base CPS', 'Efficiency'])
+  for (const [id, eco] of Object.entries(WORKERS_ECONOMY)) {
+    const efficiency = eco.baseCps.div(eco.baseCost).toNumber()
+    data.push([
+      id,
+      parseFloat(eco.baseCost.toString()),
+      parseFloat(eco.baseCps.toString()),
+      parseFloat(efficiency.toFixed(6)),
+    ])
+  }
+  data.push([])
+  
+  // Статистика апгрейдов
+  data.push(['UPGRADES STATISTICS'])
+  data.push([])
+  data.push(['Upgrade', 'Base Cost', 'Cost Growth', 'Effect Type', 'Target'])
+  for (const [id, eco] of Object.entries(UPGRADES_ECONOMY)) {
+    data.push([
+      id,
+      parseFloat(eco.baseCost.toString()),
+      eco.costGrowth,
+      eco.effectType,
+      eco.effectTarget,
+    ])
+  }
+
+  return XLSX.utils.aoa_to_sheet(data)
 }
 
 // ============================================
@@ -221,28 +284,45 @@ function exportPrestige(): string {
 // ============================================
 
 function main() {
-  const outputDir = process.cwd()
+  console.log('📊 Exporting game balance to Excel...\n')
 
-  // Workers
-  const workersCSV = exportWorkers()
-  const workersPath = join(outputDir, 'balance_workers.csv')
-  writeFileSync(workersPath, workersCSV, 'utf-8')
-  console.log(`✅ Exported workers to: ${workersPath}`)
+  // Создаём новую книгу
+  const workbook = XLSX.utils.book_new()
 
-  // Upgrades
-  const upgradesCSV = exportUpgrades()
-  const upgradesPath = join(outputDir, 'balance_upgrades.csv')
-  writeFileSync(upgradesPath, upgradesCSV, 'utf-8')
-  console.log(`✅ Exported upgrades to: ${upgradesPath}`)
+  // Добавляем листы
+  console.log('  Creating Summary sheet...')
+  const summarySheet = createSummarySheet()
+  XLSX.utils.book_append_sheet(workbook, summarySheet, 'Summary')
 
-  // Prestige
-  const prestigeCSV = exportPrestige()
-  const prestigePath = join(outputDir, 'balance_prestige.csv')
-  writeFileSync(prestigePath, prestigeCSV, 'utf-8')
-  console.log(`✅ Exported prestige to: ${prestigePath}`)
+  console.log('  Creating Workers sheet...')
+  const workersSheet = createWorkersSheet()
+  XLSX.utils.book_append_sheet(workbook, workersSheet, 'Workers')
 
-  console.log('\n📊 Balance data exported successfully!')
-  console.log('   Open CSV files in Excel/Google Sheets for analysis')
+  console.log('  Creating Upgrades sheet...')
+  const upgradesSheet = createUpgradesSheet()
+  XLSX.utils.book_append_sheet(workbook, upgradesSheet, 'Upgrades')
+
+  console.log('  Creating Prestige Progression sheet...')
+  const prestigeProgressionSheet = createPrestigeProgressionSheet()
+  XLSX.utils.book_append_sheet(workbook, prestigeProgressionSheet, 'Prestige Progression')
+
+  console.log('  Creating Prestige Upgrades sheet...')
+  const prestigeUpgradesSheet = createPrestigeUpgradesSheet()
+  XLSX.utils.book_append_sheet(workbook, prestigeUpgradesSheet, 'Prestige Upgrades')
+
+  // Сохраняем файл
+  const outputPath = join(process.cwd(), 'game_balance.xlsx')
+  XLSX.writeFile(workbook, outputPath)
+
+  console.log('\n✅ Balance exported successfully!')
+  console.log(`   File: ${outputPath}`)
+  console.log('\n📋 Sheets included:')
+  console.log('   1. Summary - общая информация и константы')
+  console.log('   2. Workers - все данные воркеров')
+  console.log('   3. Upgrades - все данные апгрейдов')
+  console.log('   4. Prestige Progression - прогрессия престижа')
+  console.log('   5. Prestige Upgrades - престиж-апгрейды')
+  console.log('\n🎯 Open in Excel/LibreOffice/Google Sheets for analysis')
 }
 
 main()
