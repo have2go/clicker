@@ -31,6 +31,7 @@ interface PrestigeStore extends PrestigeState {
   calculatePrestigeReward: (totalCrystalsEarned: Decimal) => Decimal
   performPrestige: (totalCrystalsEarned: Decimal, resetGameCallback: () => void) => void
   buyPrestigeUpgrade: (upgradeId: string) => void
+  reset: () => void
   
   // Утилиты
   getUpgradeLevel: (upgradeId: string) => number
@@ -264,6 +265,19 @@ export const usePrestigeStore = create<PrestigeStore>((set, get) => {
     
     getGlobalMultiplier: () => {
       return PRESTIGE_CONFIG.getGlobalMultiplier(get().currency)
+    },
+    
+    reset: () => {
+      set({
+        ...initialState,
+        upgrades: new Map(),
+      })
+      
+      // Очищаем престиж-множители
+      const multiplierStore = useMultiplierStore.getState()
+      multiplierStore.clearMultipliersBySource(MultiplierSource.PRESTIGE)
+      
+      saveToStorage()
     },
     
     saveToStorage,

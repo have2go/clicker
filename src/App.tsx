@@ -14,6 +14,7 @@ import { UpgradeCard } from './components/UpgradeCard'
 import { WorkerCard } from './components/WorkerCard'
 import { StatsPanel } from './components/StatsPanel'
 import { PrestigePanel } from './components/PrestigePanel'
+import { DevPanel } from './components/DevPanel'
 import styles from './App.module.scss'
 import diamondImage from './assets/diamond.svg'
 
@@ -304,20 +305,14 @@ function App() {
 
   return (
     <div className={`${styles.container} ${isSheetOpen ? styles.sheetOpen : ''}`}>
+      {/* DEV Tools */}
+      <DevPanel />
+      
       {/* Header: Crystal counter */}
       <div className={styles.crystalsStat}>
         <div className={styles.crystalsAmount}>
           💎 {formatNumber(crystals)} Cr
         </div>
-        {import.meta.env.DEV && (
-          <button 
-            className={styles.resetButton} 
-            onClick={reset} 
-            title="Сбросить игру (только для разработки)"
-          >
-            🔄
-          </button>
-        )}
       </div>
       {totalCps.gt(0) && (
         <div className={styles.cpsUnderHeader}>

@@ -72,39 +72,6 @@ $secondaryTextOpacity: 0.8;
   margin-top: 0.6rem; // небольшой отступ от блока счётчика
 }
 
-// ============================================
-// DEV MODE: Стили кнопки сброса (только для разработки)
-// Удалить в продакшене вместе с кнопкой в App.tsx
-// ============================================
-.resetButton {
-  position: absolute;
-  right: 1rem;
-  padding: 0.5rem;
-  border: none;
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.15);
-  color: white;
-  font-size: 1.2rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.5rem;
-  height: 2.5rem;
-  flex-shrink: 0;
-  -webkit-tap-highlight-color: transparent; // Убираем синюю подсветку
-
-  &:hover {
-    background: rgba(255, 255, 255, 0.25);
-    transform: scale(1.1);
-  }
-
-  &:active {
-    transform: scale(0.95);
-  }
-}
-
 // Секция 2: Область кнопки кликера с CPS
 .clickArea {
   display: flex;
@@ -362,14 +329,6 @@ $secondaryTextOpacity: 0.8;
     font-variant-numeric: tabular-nums;
     font-feature-settings: "tnum";
     margin-top: 0.45rem;
-  }
-
-  .resetButton {
-    width: 2rem;
-    height: 2rem;
-    font-size: 1rem;
-    padding: 0.4rem;
-    right: 0.5rem;
   }
 
   .clickButton {
