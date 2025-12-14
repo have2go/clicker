@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { useGameStore } from './stores/gameStore'
 import { useMultiplierStore } from './stores/multiplierStore'
 import { usePrestigeStore } from './stores/prestigeStore'
@@ -16,8 +16,6 @@ import { StatsPanel } from './components/StatsPanel'
 import { PrestigePanel } from './components/PrestigePanel'
 import styles from './App.module.scss'
 import diamondImage from './assets/diamond.svg'
-
-const DEV_MODE = true
 
 type Tab = 'active' | 'passive' | 'stats' | 'prestige'
 
@@ -98,14 +96,14 @@ function App() {
     [calculatePrestigeReward, totalCrystalsEarned]
   )
   
-  // Prestige handler
-  const handlePrestige = () => {
+  // Prestige handler (memoized to prevent unnecessary re-subscriptions in useTelegramMainButton)
+  const handlePrestige = useCallback(() => {
     if (window.confirm('Вы уверены? Весь прогресс будет сброшен!')) {
       haptics.warning()
       performPrestige(totalCrystalsEarned, reset)
       haptics.success()
     }
-  }
+  }, [haptics, performPrestige, totalCrystalsEarned, reset])
   
   // Telegram MainButton для престижа (показывается только на вкладке престижа)
   useTelegramMainButton({
@@ -118,13 +116,13 @@ function App() {
   })
   
   // Click handler с тактильной обратной связью
-  const handleClick = () => {
+  const handleClick = useCallback(() => {
     click()
     haptics.light()
-  }
+  }, [click, haptics])
   
-  // Wrapped buy functions с haptics
-  const handleBuyWorker = (workerId: string) => {
+  // Wrapped buy functions с haptics (memoized to prevent unnecessary re-renders of child components)
+  const handleBuyWorker = useCallback((workerId: string) => {
     const canBuy = canAffordWorker(workerId)
     if (canBuy) {
       buyWorker(workerId)
@@ -132,9 +130,9 @@ function App() {
     } else {
       haptics.error()
     }
-  }
+  }, [canAffordWorker, buyWorker, haptics])
   
-  const handleBuyUpgrade = (upgradeId: string) => {
+  const handleBuyUpgrade = useCallback((upgradeId: string) => {
     const canBuy = canAffordUpgrade(upgradeId)
     if (canBuy) {
       buyUpgrade(upgradeId)
@@ -142,7 +140,7 @@ function App() {
     } else {
       haptics.error()
     }
-  }
+  }, [canAffordUpgrade, buyUpgrade, haptics])
   
   // Get upgrades and workers
   const activeUpgrades = useMemo(() => 
@@ -164,13 +162,13 @@ function App() {
 
   const isSheetOpen = activeTab !== null
 
-  const handleTabClick = (tab: Tab) => {
+  const handleTabClick = useCallback((tab: Tab) => {
     haptics.selectionChanged()
     setActiveTab(prev => (prev === tab ? null : tab))
-  }
+  }, [haptics])
 
-  // Gesture handlers for bottom sheet
-  const handleGestureStart = (clientY: number, target: EventTarget | null) => {
+  // Gesture handlers for bottom sheet (memoized to prevent unnecessary re-creation)
+  const handleGestureStart = useCallback((clientY: number, target: EventTarget | null) => {
     // Не начинаем драг если кликнули по табу
     if (target instanceof HTMLElement && target.closest(`.${styles.tab}`)) {
       return
@@ -179,9 +177,9 @@ function App() {
     setIsDragging(true)
     setDragStartY(clientY)
     setHasDragged(false)
-  }
+  }, [])
 
-  const handleGestureMove = (clientY: number) => {
+  const handleGestureMove = useCallback((clientY: number) => {
     if (!isDragging || !sheetRef.current) return
 
     const deltaY = clientY - dragStartY
@@ -201,9 +199,9 @@ function App() {
       const clampedDelta = Math.max(deltaY, -300)
       sheetRef.current.style.transform = `translate(-50%, calc(100% - var(--sheet-peek) + ${clampedDelta}px))`
     }
-  }
+  }, [isDragging, dragStartY, isSheetOpen])
 
-  const handleGestureEnd = (clientY: number) => {
+  const handleGestureEnd = useCallback((clientY: number) => {
     if (!isDragging || !sheetRef.current) return
 
     const deltaY = clientY - dragStartY
@@ -222,10 +220,10 @@ function App() {
 
     setIsDragging(false)
     setDragStartY(0)
-  }
+  }, [isDragging, dragStartY, isSheetOpen])
 
   // Handle click on handle (tap to toggle)
-  const handleHandleClick = (e: React.MouseEvent | React.TouchEvent) => {
+  const handleHandleClick = useCallback((e: React.MouseEvent | React.TouchEvent) => {
     // Не обрабатываем клик если был драг
     if (hasDragged) {
       setHasDragged(false)
@@ -240,34 +238,34 @@ function App() {
     } else {
       setActiveTab('active')
     }
-  }
+  }, [hasDragged, isSheetOpen])
 
-  // Touch event handlers
-  const handleTouchStart = (e: React.TouchEvent) => {
+  // Touch event handlers (memoized)
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
     const touch = e.touches[0]
     if (touch) {
       handleGestureStart(touch.clientY, e.target)
     }
-  }
+  }, [handleGestureStart])
 
-  const handleTouchMove = (e: React.TouchEvent) => {
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
     const touch = e.touches[0]
     if (touch) {
       handleGestureMove(touch.clientY)
     }
-  }
+  }, [handleGestureMove])
 
-  const handleTouchEnd = (e: React.TouchEvent) => {
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
     const touch = e.changedTouches[0]
     if (touch) {
       handleGestureEnd(touch.clientY)
     }
-  }
+  }, [handleGestureEnd])
 
   // Mouse event handlers (for desktop)
-  const handleMouseDown = (e: React.MouseEvent) => {
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
     handleGestureStart(e.clientY, e.target)
-  }
+  }, [handleGestureStart])
 
   useEffect(() => {
     if (!isDragging) return
@@ -287,7 +285,7 @@ function App() {
       document.removeEventListener('mousemove', handleMouseMove)
       document.removeEventListener('mouseup', handleMouseUp)
     }
-  }, [isDragging, dragStartY, isSheetOpen])
+  }, [isDragging, handleGestureMove, handleGestureEnd])
 
   return (
     <div className={`${styles.container} ${isSheetOpen ? styles.sheetOpen : ''}`}>
@@ -296,7 +294,7 @@ function App() {
         <div className={styles.crystalsAmount}>
           💎 {formatNumber(crystals)} Cr
         </div>
-        {DEV_MODE && (
+        {import.meta.env.DEV && (
           <button 
             className={styles.resetButton} 
             onClick={reset} 

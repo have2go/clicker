@@ -258,7 +258,34 @@ const expensiveValue = useMemo(() => calculateSomething(), [deps])
 export const ListItem = memo(function ListItem({ ... }) { ... })
 ```
 
-3. **Селекторы в Zustand:**
+3. **useCallback** для стабильных функций:
+```typescript
+// ✅ Хорошо - функция не пересоздается при каждом рендере
+const handleClick = useCallback(() => {
+  doSomething()
+}, [dependencies])
+```
+
+4. **ВАЖНО: Мемоизация возвращаемых объектов в custom hooks:**
+```typescript
+// ❌ ПЛОХО - новый объект при каждом рендере
+export function useMyHook() {
+  return {
+    method1: () => { ... },
+    method2: () => { ... },
+  }
+}
+
+// ✅ ХОРОШО - стабильная ссылка на объект
+export function useMyHook() {
+  return useMemo(() => ({
+    method1: () => { ... },
+    method2: () => { ... },
+  }), [dependencies])
+}
+```
+
+5. **Селекторы в Zustand:**
 ```typescript
 // ❌ Плохо - перерисовка при любом изменении store
 const store = useGameStore()

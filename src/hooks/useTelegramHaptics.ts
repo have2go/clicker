@@ -1,6 +1,6 @@
 import { hapticFeedback } from '@telegram-apps/sdk'
 import { isTelegramEnvironment } from '../providers/TelegramProvider'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 
 /**
  * Хук для использования тактильных вибраций Telegram
@@ -17,7 +17,9 @@ export function useTelegramHaptics() {
     }
   }, [isTelegram])
 
-  return {
+  // Мемоизируем возвращаемый объект для стабильности ссылки
+  // Это позволяет useCallback в компонентах работать корректно
+  return useMemo(() => ({
     // Легкая вибрация для обычных кликов
     light: () => {
       if (!isAvailable || !hapticFeedback.impactOccurred.isAvailable()) return
@@ -87,5 +89,5 @@ export function useTelegramHaptics() {
         console.warn('[Haptics] Selection changed failed:', error)
       }
     },
-  }
+  }), [isAvailable])
 }
