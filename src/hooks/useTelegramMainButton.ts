@@ -20,6 +20,8 @@ export function useTelegramMainButton(options: UseTelegramMainButtonOptions) {
   useEffect(() => {
     if (!isTelegram) return
 
+    let cleanup: (() => void) | undefined
+
     try {
       // Монтируем кнопку если еще не смонтирована
       if (mainButton.mount.isAvailable()) {
@@ -39,12 +41,13 @@ export function useTelegramMainButton(options: UseTelegramMainButtonOptions) {
 
       // Подписываемся на клики
       if (mainButton.onClick.isAvailable()) {
-        const unsubscribe = mainButton.onClick(onClick)
-        return unsubscribe
+        cleanup = mainButton.onClick(onClick)
       }
     } catch (error) {
       console.warn('[MainButton] Setup failed:', error)
     }
+
+    return cleanup
   }, [isTelegram, text, isVisible, isEnabled, onClick])
 }
 
