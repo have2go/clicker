@@ -1,14 +1,16 @@
-import { D } from '../utils/bigNumber'
 import {
   type UpgradeConfig,
   UpgradeType,
   UpgradeCategory,
   type UpgradeEffect,
 } from '../types/upgrades'
+import { UPGRADES_ECONOMY } from './economy/balance'
 
 /**
  * Все апгрейды в игре
- * Конфигурация позволяет легко добавлять новые апгрейды
+ * 
+ * ВАЖНО: Экономические параметры (цены, эффекты, рост) находятся в economy/balance.ts
+ * Здесь только контент: названия, описания, иконки, типы, категории
  */
 
 export const UPGRADES: Record<string, UpgradeConfig> = {
@@ -23,12 +25,13 @@ export const UPGRADES: Record<string, UpgradeConfig> = {
     icon: '⚡',
     type: UpgradeType.CLICK,
     category: UpgradeCategory.ACTIVE,
-    baseCost: D(20),
-    costGrowth: 1.6,
+    // Экономика из balance.ts
+    baseCost: UPGRADES_ECONOMY.clickPower.baseCost,
+    costGrowth: UPGRADES_ECONOMY.clickPower.costGrowth,
     effect: (level: number): UpgradeEffect => ({
-      type: 'additive',
-      target: 'click',
-      value: D(level * 0.2),
+      type: UPGRADES_ECONOMY.clickPower.effectType,
+      target: UPGRADES_ECONOMY.clickPower.effectTarget,
+      value: UPGRADES_ECONOMY.clickPower.effectFormula(level),
     }),
   },
   
@@ -39,19 +42,16 @@ export const UPGRADES: Record<string, UpgradeConfig> = {
     icon: '💪',
     type: UpgradeType.MULTIPLIER,
     category: UpgradeCategory.ACTIVE,
-    baseCost: D(500),
-    costGrowth: 2.5,
-    effect: (level: number): UpgradeEffect => ({
-      type: 'multiplicative',
-      target: 'click',
-      value: D(Math.pow(1.25, level)),
-    }),
-    unlockRequirement: {
-      type: 'upgrade',
-      targetId: 'clickPower',
-      level: 5,
-    },
     showBeforeUnlock: false,
+    // Экономика из balance.ts
+    baseCost: UPGRADES_ECONOMY.clickMultiplier.baseCost,
+    costGrowth: UPGRADES_ECONOMY.clickMultiplier.costGrowth,
+    unlockRequirement: UPGRADES_ECONOMY.clickMultiplier.unlockRequirement,
+    effect: (level: number): UpgradeEffect => ({
+      type: UPGRADES_ECONOMY.clickMultiplier.effectType,
+      target: UPGRADES_ECONOMY.clickMultiplier.effectTarget,
+      value: UPGRADES_ECONOMY.clickMultiplier.effectFormula(level),
+    }),
   },
   
   criticalClick: {
@@ -61,20 +61,17 @@ export const UPGRADES: Record<string, UpgradeConfig> = {
     icon: '💥',
     type: UpgradeType.SPECIAL,
     category: UpgradeCategory.ACTIVE,
-    baseCost: D(5000),
-    costGrowth: 3,
-    effect: (level: number): UpgradeEffect => ({
-      type: 'additive',
-      target: 'click',
-      value: D(level * 0.05), // Будет использоваться для шанса крита
-    }),
-    maxLevel: 20, // Максимум 100% шанс
-    unlockRequirement: {
-      type: 'upgrade',
-      targetId: 'clickMultiplier',
-      level: 3,
-    },
     showBeforeUnlock: false,
+    // Экономика из balance.ts
+    baseCost: UPGRADES_ECONOMY.criticalClick.baseCost,
+    costGrowth: UPGRADES_ECONOMY.criticalClick.costGrowth,
+    maxLevel: UPGRADES_ECONOMY.criticalClick.maxLevel,
+    unlockRequirement: UPGRADES_ECONOMY.criticalClick.unlockRequirement,
+    effect: (level: number): UpgradeEffect => ({
+      type: UPGRADES_ECONOMY.criticalClick.effectType,
+      target: UPGRADES_ECONOMY.criticalClick.effectTarget,
+      value: UPGRADES_ECONOMY.criticalClick.effectFormula(level),
+    }),
   },
   
   // ============================================
@@ -88,18 +85,16 @@ export const UPGRADES: Record<string, UpgradeConfig> = {
     icon: '🤖',
     type: UpgradeType.AUTOCLICKER,
     category: UpgradeCategory.UTILITY,
-    baseCost: D(1000),
-    costGrowth: 2,
-    effect: (level: number): UpgradeEffect => ({
-      type: 'additive',
-      target: 'click',
-      value: D(level), // кликов в секунду
-    }),
-    unlockRequirement: {
-      type: 'crystals',
-      amount: D(500),
-    },
     showBeforeUnlock: true,
+    // Экономика из balance.ts
+    baseCost: UPGRADES_ECONOMY.autoClicker.baseCost,
+    costGrowth: UPGRADES_ECONOMY.autoClicker.costGrowth,
+    unlockRequirement: UPGRADES_ECONOMY.autoClicker.unlockRequirement,
+    effect: (level: number): UpgradeEffect => ({
+      type: UPGRADES_ECONOMY.autoClicker.effectType,
+      target: UPGRADES_ECONOMY.autoClicker.effectTarget,
+      value: UPGRADES_ECONOMY.autoClicker.effectFormula(level),
+    }),
   },
   
   // ============================================
@@ -113,19 +108,16 @@ export const UPGRADES: Record<string, UpgradeConfig> = {
     icon: '🌟',
     type: UpgradeType.MULTIPLIER,
     category: UpgradeCategory.PASSIVE,
-    baseCost: D(2000),
-    costGrowth: 2.2,
-    effect: (level: number): UpgradeEffect => ({
-      type: 'multiplicative',
-      target: 'global',
-      value: D(Math.pow(1.1, level)),
-    }),
-    unlockRequirement: {
-      type: 'worker',
-      targetId: 'basic',
-      level: 10,
-    },
     showBeforeUnlock: true,
+    // Экономика из balance.ts
+    baseCost: UPGRADES_ECONOMY.globalProduction.baseCost,
+    costGrowth: UPGRADES_ECONOMY.globalProduction.costGrowth,
+    unlockRequirement: UPGRADES_ECONOMY.globalProduction.unlockRequirement,
+    effect: (level: number): UpgradeEffect => ({
+      type: UPGRADES_ECONOMY.globalProduction.effectType,
+      target: UPGRADES_ECONOMY.globalProduction.effectTarget,
+      value: UPGRADES_ECONOMY.globalProduction.effectFormula(level),
+    }),
   },
   
   workerEfficiency: {
@@ -135,19 +127,16 @@ export const UPGRADES: Record<string, UpgradeConfig> = {
     icon: '⚙️',
     type: UpgradeType.MULTIPLIER,
     category: UpgradeCategory.PASSIVE,
-    baseCost: D(10000),
-    costGrowth: 2.8,
-    effect: (level: number): UpgradeEffect => ({
-      type: 'multiplicative',
-      target: 'production',
-      value: D(Math.pow(1.5, level)),
-    }),
-    unlockRequirement: {
-      type: 'worker',
-      targetId: 'engineer',
-      level: 5,
-    },
     showBeforeUnlock: false,
+    // Экономика из balance.ts
+    baseCost: UPGRADES_ECONOMY.workerEfficiency.baseCost,
+    costGrowth: UPGRADES_ECONOMY.workerEfficiency.costGrowth,
+    unlockRequirement: UPGRADES_ECONOMY.workerEfficiency.unlockRequirement,
+    effect: (level: number): UpgradeEffect => ({
+      type: UPGRADES_ECONOMY.workerEfficiency.effectType,
+      target: UPGRADES_ECONOMY.workerEfficiency.effectTarget,
+      value: UPGRADES_ECONOMY.workerEfficiency.effectFormula(level),
+    }),
   },
   
   // ============================================
@@ -161,19 +150,17 @@ export const UPGRADES: Record<string, UpgradeConfig> = {
     icon: '🍀',
     type: UpgradeType.SPECIAL,
     category: UpgradeCategory.SPECIAL,
-    baseCost: D(50000),
-    costGrowth: 3.5,
-    effect: (level: number): UpgradeEffect => ({
-      type: 'multiplicative',
-      target: 'global',
-      value: D(Math.pow(1.02, level)),
-    }),
-    maxLevel: 50,
-    unlockRequirement: {
-      type: 'crystals',
-      amount: D(25000),
-    },
     showBeforeUnlock: true,
+    // Экономика из balance.ts
+    baseCost: UPGRADES_ECONOMY.luckyBonus.baseCost,
+    costGrowth: UPGRADES_ECONOMY.luckyBonus.costGrowth,
+    maxLevel: UPGRADES_ECONOMY.luckyBonus.maxLevel,
+    unlockRequirement: UPGRADES_ECONOMY.luckyBonus.unlockRequirement,
+    effect: (level: number): UpgradeEffect => ({
+      type: UPGRADES_ECONOMY.luckyBonus.effectType,
+      target: UPGRADES_ECONOMY.luckyBonus.effectTarget,
+      value: UPGRADES_ECONOMY.luckyBonus.effectFormula(level),
+    }),
   },
 }
 

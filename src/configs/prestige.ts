@@ -1,30 +1,20 @@
-import { D } from '../utils/bigNumber'
-import type { Decimal } from '../utils/bigNumber'
 import type { PrestigeConfig, PrestigeUpgrade } from '../types/prestige'
+import { 
+  PRESTIGE_ECONOMY, 
+  PRESTIGE_UPGRADES_ECONOMY 
+} from './economy/balance'
 
 /**
  * Конфигурация системы престижа
+ * 
+ * ВАЖНО: Экономические параметры (формулы, стоимости) находятся в economy/balance.ts
+ * Здесь только структура и контент
  */
 export const PRESTIGE_CONFIG: PrestigeConfig = {
-  // Требуется 1 миллион кристаллов для первого престижа
-  minCrystalsForPrestige: D(1e6),
-  
-  // Формула: sqrt(totalCrystals / 1e6)
-  // Примеры:
-  // - 1M кристаллов = 1 престиж-кристалл
-  // - 4M кристаллов = 2 престиж-кристалла
-  // - 9M кристаллов = 3 престиж-кристалла
-  // - 100M кристаллов = 10 престиж-кристаллов
-  calculateReward: (totalCrystals: Decimal): Decimal => {
-    if (totalCrystals.lt(1e6)) return D(0)
-    return totalCrystals.div(1e6).sqrt().floor()
-  },
-  
-  // Множитель: 1 + (currency * 0.1)
-  // Каждый престиж-кристалл даёт +10% ко всему
-  getGlobalMultiplier: (currency: Decimal): Decimal => {
-    return D(1).add(currency.mul(0.1))
-  },
+  // Экономика из balance.ts
+  minCrystalsForPrestige: PRESTIGE_ECONOMY.minCrystalsRequired,
+  calculateReward: PRESTIGE_ECONOMY.rewardFormula,
+  getGlobalMultiplier: PRESTIGE_ECONOMY.currencyMultiplierFormula,
 }
 
 /**
@@ -36,10 +26,11 @@ export const PRESTIGE_UPGRADES: Record<string, PrestigeUpgrade> = {
     name: 'Усиление производства',
     description: 'Каждый уровень увеличивает производство на 25%',
     icon: '⚡',
-    cost: D(5),
+    // Экономика из balance.ts
+    cost: PRESTIGE_UPGRADES_ECONOMY.productionBoost.cost,
     effect: (level: number) => ({
       type: 'multiplier',
-      value: D(Math.pow(1.25, level)),
+      value: PRESTIGE_UPGRADES_ECONOMY.productionBoost.effectFormula(level),
       target: 'production',
     }),
   },
@@ -49,10 +40,11 @@ export const PRESTIGE_UPGRADES: Record<string, PrestigeUpgrade> = {
     name: 'Усиление кликов',
     description: 'Каждый уровень увеличивает силу клика на 50%',
     icon: '💪',
-    cost: D(5),
+    // Экономика из balance.ts
+    cost: PRESTIGE_UPGRADES_ECONOMY.clickBoost.cost,
     effect: (level: number) => ({
       type: 'multiplier',
-      value: D(Math.pow(1.5, level)),
+      value: PRESTIGE_UPGRADES_ECONOMY.clickBoost.effectFormula(level),
       target: 'click',
     }),
   },
@@ -62,10 +54,11 @@ export const PRESTIGE_UPGRADES: Record<string, PrestigeUpgrade> = {
     name: 'Эффективность воркеров',
     description: 'Каждый уровень увеличивает производство всех воркеров на 100%',
     icon: '👷',
-    cost: D(10),
+    // Экономика из balance.ts
+    cost: PRESTIGE_UPGRADES_ECONOMY.workerEfficiency.cost,
     effect: (level: number) => ({
       type: 'multiplier',
-      value: D(Math.pow(2, level)),
+      value: PRESTIGE_UPGRADES_ECONOMY.workerEfficiency.effectFormula(level),
       target: 'production',
     }),
   },
@@ -75,11 +68,12 @@ export const PRESTIGE_UPGRADES: Record<string, PrestigeUpgrade> = {
     name: 'Автопрогресс',
     description: 'Начинаете с 10 базовых рабочих после престижа',
     icon: '🚀',
-    cost: D(20),
-    maxLevel: 1,
+    // Экономика из balance.ts
+    cost: PRESTIGE_UPGRADES_ECONOMY.autoProgress.cost,
+    maxLevel: PRESTIGE_UPGRADES_ECONOMY.autoProgress.maxLevel,
     effect: (level: number) => ({
       type: 'special',
-      value: D(level),
+      value: PRESTIGE_UPGRADES_ECONOMY.autoProgress.effectFormula(level),
     }),
   },
   
@@ -88,11 +82,12 @@ export const PRESTIGE_UPGRADES: Record<string, PrestigeUpgrade> = {
     name: 'Дешевле апгрейды',
     description: 'Каждый уровень уменьшает стоимость апгрейдов на 5%',
     icon: '💰',
-    cost: D(15),
-    maxLevel: 10,
+    // Экономика из balance.ts
+    cost: PRESTIGE_UPGRADES_ECONOMY.cheaperUpgrades.cost,
+    maxLevel: PRESTIGE_UPGRADES_ECONOMY.cheaperUpgrades.maxLevel,
     effect: (level: number) => ({
       type: 'multiplier',
-      value: D(Math.pow(0.95, level)),
+      value: PRESTIGE_UPGRADES_ECONOMY.cheaperUpgrades.effectFormula(level),
       target: 'upgradeCost',
     }),
   },

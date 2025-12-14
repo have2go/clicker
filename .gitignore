@@ -60,3 +60,6 @@ Thumbs.db
 # Misc
 *.tsbuildinfo
 .vite/
+
+# Balance exports
+balance_*.csv

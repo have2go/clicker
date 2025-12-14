@@ -1,9 +1,11 @@
-import { D } from '../utils/bigNumber'
 import type { WorkerConfig } from '../types/workers'
+import { WORKERS_ECONOMY } from './economy/balance'
 
 /**
  * Все типы воркеров в игре
- * Конфигурация позволяет легко добавлять новые типы воркеров
+ * 
+ * ВАЖНО: Экономические параметры (цены, CPS, рост) находятся в economy/balance.ts
+ * Здесь только контент: названия, описания, иконки, UI параметры
  */
 
 export const WORKERS: Record<string, WorkerConfig> = {
@@ -16,11 +18,10 @@ export const WORKERS: Record<string, WorkerConfig> = {
     name: 'Рабочий',
     description: 'Базовый рабочий, добывает небольшое количество кристаллов',
     icon: '👷',
-    baseCps: D(0.1),
-    baseCost: D(25),
-    costGrowth: 1.15,
     order: 1,
     color: '#8B7355',
+    // Экономика из balance.ts
+    ...WORKERS_ECONOMY.basic,
   },
   
   engineer: {
@@ -28,17 +29,11 @@ export const WORKERS: Record<string, WorkerConfig> = {
     name: 'Инженер',
     description: 'Опытный специалист с улучшенной производительностью',
     icon: '👨‍🔧',
-    baseCps: D(1),
-    baseCost: D(250),
-    costGrowth: 1.15,
     order: 2,
     color: '#4169E1',
-    unlockRequirement: {
-      type: 'worker',
-      targetId: 'basic',
-      level: 5,
-    },
     showBeforeUnlock: true,
+    // Экономика из balance.ts
+    ...WORKERS_ECONOMY.engineer,
   },
   
   master: {
@@ -46,17 +41,11 @@ export const WORKERS: Record<string, WorkerConfig> = {
     name: 'Мастер',
     description: 'Высококвалифицированный работник',
     icon: '👨‍🏭',
-    baseCps: D(10),
-    baseCost: D(2500),
-    costGrowth: 1.15,
     order: 3,
     color: '#9370DB',
-    unlockRequirement: {
-      type: 'worker',
-      targetId: 'engineer',
-      level: 5,
-    },
     showBeforeUnlock: true,
+    // Экономика из balance.ts
+    ...WORKERS_ECONOMY.master,
   },
   
   // ============================================
@@ -68,17 +57,11 @@ export const WORKERS: Record<string, WorkerConfig> = {
     name: 'Архитектор',
     description: 'Проектирует эффективные системы добычи',
     icon: '👨‍💼',
-    baseCps: D(100),
-    baseCost: D(25000),
-    costGrowth: 1.15,
     order: 4,
     color: '#FFD700',
-    unlockRequirement: {
-      type: 'worker',
-      targetId: 'master',
-      level: 5,
-    },
     showBeforeUnlock: true,
+    // Экономика из balance.ts
+    ...WORKERS_ECONOMY.architect,
   },
   
   scientist: {
@@ -86,17 +69,11 @@ export const WORKERS: Record<string, WorkerConfig> = {
     name: 'Учёный',
     description: 'Использует научные методы для оптимизации добычи',
     icon: '👨‍🔬',
-    baseCps: D(1000),
-    baseCost: D(250000),
-    costGrowth: 1.15,
     order: 5,
     color: '#00CED1',
-    unlockRequirement: {
-      type: 'worker',
-      targetId: 'architect',
-      level: 5,
-    },
     showBeforeUnlock: true,
+    // Экономика из balance.ts
+    ...WORKERS_ECONOMY.scientist,
   },
   
   // ============================================
@@ -108,17 +85,11 @@ export const WORKERS: Record<string, WorkerConfig> = {
     name: 'Надзиратель',
     description: 'Координирует работу всех остальных',
     icon: '👑',
-    baseCps: D(10000),
-    baseCost: D(2500000),
-    costGrowth: 1.15,
     order: 6,
     color: '#DC143C',
-    unlockRequirement: {
-      type: 'worker',
-      targetId: 'scientist',
-      level: 5,
-    },
     showBeforeUnlock: true,
+    // Экономика из balance.ts
+    ...WORKERS_ECONOMY.overseer,
   },
   
   automaton: {
@@ -126,17 +97,11 @@ export const WORKERS: Record<string, WorkerConfig> = {
     name: 'Автоматон',
     description: 'Полностью автоматизированная добывающая машина',
     icon: '🤖',
-    baseCps: D(100000),
-    baseCost: D(25000000),
-    costGrowth: 1.15,
     order: 7,
     color: '#708090',
-    unlockRequirement: {
-      type: 'worker',
-      targetId: 'overseer',
-      level: 5,
-    },
     showBeforeUnlock: true,
+    // Экономика из balance.ts
+    ...WORKERS_ECONOMY.automaton,
   },
   
   // ============================================
@@ -148,17 +113,11 @@ export const WORKERS: Record<string, WorkerConfig> = {
     name: 'Кристаллизатор',
     description: 'Создаёт кристаллы из чистой энергии',
     icon: '💎',
-    baseCps: D(1000000),
-    baseCost: D(250000000),
-    costGrowth: 1.15,
     order: 8,
     color: '#FF1493',
-    unlockRequirement: {
-      type: 'worker',
-      targetId: 'automaton',
-      level: 5,
-    },
     showBeforeUnlock: false,
+    // Экономика из balance.ts
+    ...WORKERS_ECONOMY.crystallizer,
   },
   
   synthesizer: {
@@ -166,17 +125,11 @@ export const WORKERS: Record<string, WorkerConfig> = {
     name: 'Синтезатор',
     description: 'Синтезирует кристаллы на квантовом уровне',
     icon: '✨',
-    baseCps: D(10000000),
-    baseCost: D(2500000000),
-    costGrowth: 1.15,
     order: 9,
     color: '#8A2BE2',
-    unlockRequirement: {
-      type: 'worker',
-      targetId: 'crystallizer',
-      level: 5,
-    },
     showBeforeUnlock: false,
+    // Экономика из balance.ts
+    ...WORKERS_ECONOMY.synthesizer,
   },
   
   transcendent: {
@@ -184,17 +137,11 @@ export const WORKERS: Record<string, WorkerConfig> = {
     name: 'Трансцендент',
     description: 'Превосходит все известные границы производства',
     icon: '🌟',
-    baseCps: D(100000000),
-    baseCost: D(25000000000),
-    costGrowth: 1.15,
     order: 10,
     color: '#FF6347',
-    unlockRequirement: {
-      type: 'worker',
-      targetId: 'synthesizer',
-      level: 5,
-    },
     showBeforeUnlock: false,
+    // Экономика из balance.ts
+    ...WORKERS_ECONOMY.transcendent,
   },
 }
 
