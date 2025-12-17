@@ -1,0 +1,39 @@
+// Shared styles for all tab sections
+.upgradesSection,
+.passiveSection,
+.globalSection,
+.offlineSection {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.categorySection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.categoryTitle {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #fff;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.categoryDescription {
+  margin: 0.5rem 0 0.75rem 0;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.4;
+}
+
+// Адаптация для маленьких экранов
+@media (max-width: 450px) {
+  .categoryTitle {
+    font-size: 1.1rem;
+  }
+}
+

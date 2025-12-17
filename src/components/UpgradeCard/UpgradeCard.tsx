@@ -1,8 +1,8 @@
 import { memo } from 'react'
-import { Decimal } from '../utils/bigNumber'
-import { formatNumber } from '../utils/numberFormatter'
-import type { UpgradeConfig } from '../types/upgrades'
-import { getUpgrade } from '../configs/upgrades'
+import { Decimal } from '../../utils/bigNumber'
+import { formatNumber } from '../../utils/numberFormatter'
+import type { UpgradeConfig } from '../../types/upgrades'
+import { getUpgrade } from '../../configs/upgrades'
 import styles from './UpgradeCard.module.scss'
 
 interface UpgradeCardProps {

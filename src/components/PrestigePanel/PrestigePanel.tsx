@@ -1,7 +1,8 @@
 import { memo } from 'react'
-import { Decimal } from '../utils/bigNumber'
-import { formatNumber } from '../utils/numberFormatter'
-import { getAllPrestigeUpgrades, PRESTIGE_CONFIG } from '../configs/prestige'
+import { Decimal } from '../../utils/bigNumber'
+import { formatNumber } from '../../utils/numberFormatter'
+import { getAllPrestigeUpgrades, PRESTIGE_CONFIG } from '../../configs/prestige'
+import type { PrestigeUpgrade } from '../../types/prestige'
 import styles from './PrestigePanel.module.scss'
 
 interface PrestigePanelProps {
@@ -79,7 +80,7 @@ export const PrestigePanel = memo(function PrestigePanel({
         <div className={styles.upgrades}>
           <h3 className={styles.upgradesTitle}>Постоянные улучшения</h3>
           
-          {upgrades.map(upgrade => {
+          {upgrades.map((upgrade: PrestigeUpgrade) => {
             const level = getUpgradeLevel(upgrade.id)
             const canAfford = canAffordUpgrade(upgrade.id)
             const isMaxed = upgrade.maxLevel !== undefined && level >= upgrade.maxLevel

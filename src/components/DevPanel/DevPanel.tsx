@@ -1,12 +1,18 @@
 import { useState, useCallback } from 'react'
-import { useGameStore } from '../stores/gameStore'
-import { useMultiplierStore } from '../stores/multiplierStore'
-import { usePrestigeStore } from '../stores/prestigeStore'
-import { MultiplierType, MultiplierSource } from '../types/multipliers'
-import { D } from '../utils/bigNumber'
+import { useGameStore } from '../../stores/gameStore'
+import { useMultiplierStore } from '../../stores/multiplierStore'
+import { usePrestigeStore } from '../../stores/prestigeStore'
+import { MultiplierType, MultiplierSource } from '../../types/multipliers'
+import { D } from '../../utils/bigNumber'
 import styles from './DevPanel.module.scss'
 
-export function DevPanel() {
+
+interface DevPanelProps {
+  onTogglePerformanceOverlay?: () => void
+  showPerformanceOverlay?: boolean
+}
+
+export function DevPanel({ onTogglePerformanceOverlay, showPerformanceOverlay }: DevPanelProps = {}) {
   const [isOpen, setIsOpen] = useState(false)
   const [incomeMultiplier, setIncomeMultiplier] = useState(1)
   const { reset } = useGameStore()
@@ -14,23 +20,19 @@ export function DevPanel() {
   const { reset: resetPrestige } = usePrestigeStore()
 
   const handleFullReset = useCallback(() => {
-    if (window.confirm('⚠️ ВЫ УВЕРЕНЫ? ЭТО УДАЛИТ ВЕСЬ ПРОГРЕСС БЕЗ ВОЗМОЖНОСТИ ВОССТАНОВЛЕНИЯ!')) {
-      if (window.confirm('Последнее предупреждение! Действительно удалить ВСЁ?')) {
-        // Полный сброс всех сторов
-        reset()
-        resetPrestige()
-        
-        // Удаляем дев-множитель если был
-        removeMultiplier('dev_income_multiplier')
-        
-        // Очистить локалсторадж полностью
-        localStorage.clear()
-        
-        alert('✅ Игра полностью сброшена!')
-        
-        // Перезагрузить страницу
-        window.location.reload()
-      }
+    if (window.confirm('⚠️ ВЫ УВЕРЕНЫ? ЭТО УДАЛИТ ВЕСЬ ПРОГРЕСС БЕЗ ВОЗМОЖНОСТИ ВОССТАНОВЛЕНИЯ!\n\nВсе достижения, апгрейды, воркеры и ресурсы будут потеряны навсегда.')) {
+      // Полный сброс всех сторов
+      reset()
+      resetPrestige()
+
+      // Удаляем дев-множитель если был
+      removeMultiplier('dev_income_multiplier')
+
+      // Очистить локалсторадж полностью
+      localStorage.clear()
+
+      // Перезагрузить страницу
+      window.location.reload()
     }
   }, [reset, resetPrestige, removeMultiplier])
 
@@ -72,7 +74,7 @@ export function DevPanel() {
       const num = Number(amount)
       if (!isNaN(num) && num > 0) {
         const { currency } = usePrestigeStore.getState()
-        usePrestigeStore.setState({ 
+        usePrestigeStore.setState({
           currency: currency.add(num),
         })
         alert(`✅ Добавлено ${num} престиж-валюты`)
@@ -115,9 +117,6 @@ export function DevPanel() {
           {/* Множитель дохода */}
           <div className={styles.section}>
             <h3>Множитель дохода</h3>
-            <p className={styles.description}>
-              Ускоряет весь доход для быстрого тестирования
-            </p>
             <div className={styles.inputGroup}>
               <input 
                 type="number" 
@@ -140,16 +139,34 @@ export function DevPanel() {
             </div>
           </div>
 
-          {/* Добавить ресурсы */}
-          <div className={styles.section}>
-            <h3>Добавить ресурсы</h3>
-            <div className={styles.buttonGroup}>
-              <button onClick={handleAddCrystals} className={styles.button}>
-                💎 Добавить кристаллы
-              </button>
-              <button onClick={handleAddPrestigeCurrency} className={styles.button}>
-                ⭐ Добавить престиж-валюту
-              </button>
+          {/* Две колонки: ресурсы и производительность */}
+          <div className={styles.twoColumnRow}>
+            {/* Добавить ресурсы */}
+            <div className={styles.section}>
+              <h3>Ресурсы</h3>
+              <div className={styles.buttonRow}>
+                <button onClick={handleAddCrystals} className={styles.button}>
+                  💎
+                </button>
+                <button onClick={handleAddPrestigeCurrency} className={styles.button}>
+                  ⭐
+                </button>
+              </div>
+            </div>
+
+            {/* Производительность */}
+            <div className={styles.section}>
+              <label className={styles.checkboxLabel}>
+                <input
+                  type="checkbox"
+                  checked={showPerformanceOverlay || false}
+                  onChange={onTogglePerformanceOverlay}
+                  className={styles.checkbox}
+                />
+                <span className={styles.checkboxText}>
+                  Показать overlay производительности
+                </span>
+              </label>
             </div>
           </div>
 
@@ -165,3 +182,4 @@ export function DevPanel() {
     </>
   )
 }
+

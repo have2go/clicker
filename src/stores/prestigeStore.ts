@@ -23,25 +23,37 @@ interface SerializedPrestigeState {
 }
 
 interface PrestigeStore extends PrestigeState {
-  // Престиж-апгрейды (уровни)
+  /** Престиж-апгрейды (уровни) */
   upgrades: Map<string, number>
-  
+
   // Действия
+  /** Проверить, можно ли совершить престиж */
   canPrestige: (totalCrystalsEarned: Decimal) => boolean
+  /** Рассчитать награду за престиж */
   calculatePrestigeReward: (totalCrystalsEarned: Decimal) => Decimal
+  /** Совершить престиж (сброс игры + награда) */
   performPrestige: (totalCrystalsEarned: Decimal, resetGameCallback: () => void) => void
+  /** Купить престиж-апгрейд */
   buyPrestigeUpgrade: (upgradeId: string) => void
+  /** Сбросить престиж (для отладки) */
   reset: () => void
-  
+
   // Утилиты
+  /** Получить уровень престиж-апгрейда */
   getUpgradeLevel: (upgradeId: string) => number
+  /** Получить стоимость престиж-апгрейда */
   getUpgradeCost: (upgradeId: string) => Decimal
+  /** Проверить, хватает ли престиж-валюты на апгрейд */
   canAffordUpgrade: (upgradeId: string) => boolean
+  /** Получить глобальный множитель от престиж-валюты */
   getGlobalMultiplier: () => Decimal
-  
+
   // Сохранение/загрузка
+  /** Сохранить состояние престижа в localStorage */
   saveToStorage: () => void
+  /** Загрузить состояние престижа из localStorage */
   loadFromStorage: () => void
+  /** Синхронизировать множители с престиж-апгрейдами */
   syncMultipliers: () => void
 }
 
@@ -96,14 +108,64 @@ export const usePrestigeStore = create<PrestigeStore>((set, get) => {
     }
   }
   
+  /**
+   * Обрабатывает специальные престиж-апгрейды (с формулами на основе престиж-валюты)
+   * @param upgradeId - ID апгрейда
+   * @param effect - эффект апгрейда
+   * @param state - состояние престижа
+   * @param multiplierStore - store множителей
+   */
+  const handleSpecialPrestigeUpgrade = (upgradeId: string, effect: any, state: PrestigeState, multiplierStore: ReturnType<typeof useMultiplierStore.getState>) => {
+    // Апгрейды с престиж-валютой в формуле
+    const currencyScalingUpgrades = ['exponentialGrowth', 'presenceAmplification', 'ultimateAscension']
+
+    if (currencyScalingUpgrades.includes(upgradeId)) {
+      const multValue = effect.value.pow(state.currency)
+
+      if (multValue.gt(1)) {
+        multiplierStore.addMultiplier({
+          id: `prestige_upgrade_${upgradeId}`,
+          type: MultiplierType.GLOBAL,
+          source: MultiplierSource.PRESTIGE,
+          value: multValue,
+          description: effect.name,
+        })
+      }
+    }
+    // Другие специальные апгрейды обрабатываются в gameStore
+    // (например, autoProgress, crystallineResonance, luckyClicks, timeWarp)
+  }
+
+  /**
+   * Обрабатывает обычные multiplier престиж-апгрейды
+   * @param upgradeId - ID апгрейда
+   * @param config - конфигурация апгрейда
+   * @param effect - эффект апгрейда
+   * @param multiplierStore - store множителей
+   */
+  const handleMultiplierPrestigeUpgrade = (upgradeId: string, config: any, effect: any, multiplierStore: ReturnType<typeof useMultiplierStore.getState>) => {
+    const multType =
+      effect.target === 'click' ? MultiplierType.CLICK :
+      effect.target === 'production' ? MultiplierType.PRODUCTION :
+      MultiplierType.GLOBAL
+
+    multiplierStore.addMultiplier({
+      id: `prestige_upgrade_${upgradeId}`,
+      type: multType,
+      source: MultiplierSource.PRESTIGE,
+      value: effect.value,
+      description: config.name,
+    })
+  }
+
   // Синхронизация множителей с престиж-апгрейдами
   const syncMultipliers = () => {
     const state = get()
     const multiplierStore = useMultiplierStore.getState()
-    
+
     // Очищаем старые престиж-множители
     multiplierStore.clearMultipliersBySource(MultiplierSource.PRESTIGE)
-    
+
     // Глобальный множитель от престиж-валюты
     const globalMult = PRESTIGE_CONFIG.getGlobalMultiplier(state.currency)
     if (globalMult.gt(1)) {
@@ -115,51 +177,20 @@ export const usePrestigeStore = create<PrestigeStore>((set, get) => {
         description: 'Кристаллы престижа',
       })
     }
-    
+
     // Множители от престиж-апгрейдов
     state.upgrades.forEach((level, upgradeId) => {
       if (level === 0) return
-      
+
       const config = getPrestigeUpgrade(upgradeId)
       if (!config) return
-      
+
       const effect = config.effect(level)
-      
+
       if (effect.type === 'multiplier') {
-        const multType = 
-          effect.target === 'click' ? MultiplierType.CLICK :
-          effect.target === 'production' ? MultiplierType.PRODUCTION :
-          MultiplierType.GLOBAL
-        
-        multiplierStore.addMultiplier({
-          id: `prestige_upgrade_${upgradeId}`,
-          type: multType,
-          source: MultiplierSource.PRESTIGE,
-          value: effect.value,
-          description: config.name,
-        })
-      }
-      
-      // Обработка специальных апгрейдов
-      if (effect.type === 'special') {
-        // Апгрейды с престиж-валютой в формуле
-        if (upgradeId === 'exponentialGrowth' || upgradeId === 'presenceAmplification' || upgradeId === 'ultimateAscension') {
-          // Эти апгрейды масштабируются с престиж-валютой
-          // effectFormula уже возвращает правильный множитель на основе level (prestge currency)
-          const multValue = effect.value.pow(state.currency)
-          
-          if (multValue.gt(1)) {
-            multiplierStore.addMultiplier({
-              id: `prestige_upgrade_${upgradeId}`,
-              type: MultiplierType.GLOBAL,
-              source: MultiplierSource.PRESTIGE,
-              value: multValue,
-              description: config.name,
-            })
-          }
-        }
-        // Другие специальные апгрейды обрабатываются в gameStore
-        // (например, autoProgress, crystallineResonance, luckyClicks, timeWarp)
+        handleMultiplierPrestigeUpgrade(upgradeId, config, effect, multiplierStore)
+      } else if (effect.type === 'special') {
+        handleSpecialPrestigeUpgrade(upgradeId, effect, state, multiplierStore)
       }
     })
   }

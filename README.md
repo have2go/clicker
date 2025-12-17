@@ -1,5 +1,8 @@
 # 💎 Crystal Clicker - Telegram Mini App
 
+[![CI](https://github.com/your-username/crystal-clicker/actions/workflows/ci.yml/badge.svg)](https://github.com/your-username/crystal-clicker/actions/workflows/ci.yml)
+[![Coverage](https://codecov.io/gh/your-username/crystal-clicker/branch/main/graph/badge.svg)](https://codecov.io/gh/your-username/crystal-clicker)
+
 Idle-кликер игра с полной интеграцией Telegram Mini Apps.
 
 ## 🚀 Быстрый старт
@@ -96,6 +99,30 @@ vercel --prod
 
 ### GitHub Pages / Netlify / Cloudflare
 Просто задеплойте папку `dist/` после `npm run build`
+
+## 🧪 Тестирование
+
+### Запуск тестов
+```bash
+# Все тесты
+npm test
+
+# С покрытием
+npm run test:coverage
+
+# В режиме наблюдения
+npm run test:watch
+```
+
+### Структура тестов
+- `src/__tests__/` - интеграционные тесты
+- `src/**/__tests__/` - unit тесты для компонентов и утилит
+- `coverage/` - отчёт о покрытии кода
+
+### CI/CD
+- Автоматический запуск тестов при push/PR
+- Проверка на Node.js 18.x и 20.x
+- Отчёт о покрытии в Codecov
 
 ## 🐛 Отладка
 

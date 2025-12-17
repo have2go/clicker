@@ -2,11 +2,21 @@ import { hapticFeedback } from '@telegram-apps/sdk'
 import { isTelegramEnvironment } from '../providers/TelegramProvider'
 import { useEffect, useState, useMemo } from 'react'
 
+interface TelegramHapticsReturn {
+  light: () => void
+  medium: () => void
+  heavy: () => void
+  success: () => void
+  error: () => void
+  warning: () => void
+  selectionChanged: () => void
+}
+
 /**
  * Хук для использования тактильных вибраций Telegram
  * Автоматически проверяет доступность и окружение
  */
-export function useTelegramHaptics() {
+export function useTelegramHaptics(): TelegramHapticsReturn {
   const isTelegram = isTelegramEnvironment()
   const [isAvailable, setIsAvailable] = useState(false)
 

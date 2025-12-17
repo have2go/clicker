@@ -1,8 +1,8 @@
 import { memo, useMemo, useState } from 'react'
-import { Decimal } from '../utils/bigNumber'
-import { formatNumber } from '../utils/numberFormatter'
-import type { WorkerConfig } from '../types/workers'
-import { getUpgrade } from '../configs/upgrades'
+import { Decimal } from '../../utils/bigNumber'
+import { formatNumber } from '../../utils/numberFormatter'
+import type { WorkerConfig } from '../../types/workers'
+import { getUpgrade } from '../../configs/upgrades'
 import styles from './WorkerCard.module.scss'
 
 interface WorkerCardProps {

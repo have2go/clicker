@@ -1,5 +1,5 @@
 import { mainButton } from '@telegram-apps/sdk'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { isTelegramEnvironment } from '../providers/TelegramProvider'
 
 interface UseTelegramMainButtonOptions {
@@ -16,6 +16,10 @@ interface UseTelegramMainButtonOptions {
 export function useTelegramMainButton(options: UseTelegramMainButtonOptions) {
   const isTelegram = isTelegramEnvironment()
   const { text, isVisible, isEnabled, onClick } = options
+  const onClickRef = useRef(onClick)
+
+  // Обновляем ref при изменении onClick
+  onClickRef.current = onClick
 
   useEffect(() => {
     if (!isTelegram) return
@@ -41,13 +45,13 @@ export function useTelegramMainButton(options: UseTelegramMainButtonOptions) {
 
       // Подписываемся на клики
       if (mainButton.onClick.isAvailable()) {
-        cleanup = mainButton.onClick(onClick)
+        cleanup = mainButton.onClick(() => onClickRef.current())
       }
     } catch (error) {
       console.warn('[MainButton] Setup failed:', error)
     }
 
     return cleanup
-  }, [isTelegram, text, isVisible, isEnabled, onClick])
+  }, [isTelegram, text, isVisible, isEnabled])
 }
 

@@ -5,7 +5,7 @@ import Decimal from 'break_infinity.js'
  * Предоставляет унифицированный API для всех операций с числами в игре
  */
 
-// Re-export Decimal для использования в других модулях
+// Re-export Decimal для использования в приложении
 export { Decimal }
 
 /**
@@ -18,6 +18,13 @@ export function D(value: string | number | Decimal): Decimal {
 /**
  * Константы для часто используемых значений
  */
+export const getDecimalZero = () => new Decimal(0)
+export const getDecimalOne = () => new Decimal(1)
+export const getDecimalTen = () => new Decimal(10)
+export const getDecimalHundred = () => new Decimal(100)
+export const getDecimalThousand = () => new Decimal(1000)
+
+// Для обратной совместимости
 export const DECIMAL_ZERO = new Decimal(0)
 export const DECIMAL_ONE = new Decimal(1)
 export const DECIMAL_TEN = new Decimal(10)
@@ -122,6 +129,10 @@ export function serializeDecimal(value: Decimal): string {
  * Десериализация Decimal из строки
  */
 export function deserializeDecimal(value: string | number): Decimal {
+  if (typeof value === 'string' && value.includes('e+')) {
+    // Handle scientific notation for very large numbers
+    return new Decimal(value)
+  }
   return new Decimal(value)
 }
 
@@ -134,7 +145,20 @@ export function safeDeserializeDecimal(
 ): Decimal {
   try {
     if (value === null || value === undefined) return fallback
-    return new Decimal(value as string | number)
+    if (typeof value === 'string' || typeof value === 'number') {
+      // First check if the value can be parsed as a valid number
+      const numValue = typeof value === 'string' ? parseFloat(value) : value
+      if (isNaN(numValue) || !isFinite(numValue)) {
+        return fallback
+      }
+
+      const decimal = new Decimal(value)
+      // Additional check if the result is valid
+      if (isValidDecimal(decimal)) {
+        return decimal
+      }
+    }
+    return fallback
   } catch {
     return fallback
   }

@@ -1,0 +1,154 @@
+.overlay {
+  position: fixed;
+  z-index: 1001;
+  user-select: none;
+  transition: none; // Убираем transition для плавного перетаскивания
+  pointer-events: auto;
+
+  &:hover {
+    cursor: grab;
+  }
+}
+
+.dragging {
+  cursor: grabbing !important;
+  user-select: none;
+}
+
+.content {
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 12px;
+  min-width: 240px;
+  max-width: 280px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.buttonRow {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  justify-content: center;
+}
+
+.button {
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+.metricsDisplay {
+  margin-top: 8px;
+}
+
+.metricSection {
+  margin-bottom: 12px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  h4 {
+    margin: 0 0 6px 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: #ccc;
+    text-align: center;
+  }
+}
+
+.metricsTable {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+
+.metricRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.02);
+  }
+}
+
+.metricName {
+  font-size: 12px;
+  color: #fff;
+  font-weight: 500;
+}
+
+.metricValue {
+  font-size: 12px;
+  color: #4CAF50;
+  font-weight: 600;
+  font-family: 'Courier New', monospace;
+  transition: all 0.3s ease;
+  position: relative;
+  padding: 0 2px; // Постоянные паддинги
+}
+
+.updated {
+  background-color: rgba(76, 175, 80, 0.2);
+  box-shadow: 0 0 0 1px #4CAF50;
+  border-radius: 3px;
+  animation: cellHighlight 2s ease-out;
+}
+
+@keyframes cellHighlight {
+  0% {
+    background-color: rgba(76, 175, 80, 0.2);
+    box-shadow: 0 0 0 1px #4CAF50;
+  }
+  100% {
+    background-color: transparent;
+    box-shadow: 0 0 0 1px transparent;
+  }
+}
+
+// Адаптивность для мобильных
+@media (max-width: 768px) {
+  .overlay {
+    top: 10px;
+    right: 10px;
+  }
+
+  .content {
+    min-width: 240px;
+    max-width: 280px;
+    padding: 12px;
+  }
+
+  .title {
+    font-size: 14px;
+  }
+
+  .metricName,
+  .metricValue {
+    font-size: 11px;
+  }
+}

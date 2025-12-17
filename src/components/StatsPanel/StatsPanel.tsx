@@ -1,6 +1,6 @@
 import { memo } from 'react'
-import { Decimal } from '../utils/bigNumber'
-import { formatNumber, formatMultiplier } from '../utils/numberFormatter'
+import { Decimal, D } from '../../utils/bigNumber'
+import { formatNumber, formatMultiplier } from '../../utils/numberFormatter'
 import styles from './StatsPanel.module.scss'
 
 interface StatsPanelProps {
@@ -56,7 +56,7 @@ export const StatsPanel = memo(function StatsPanel({
         
         <div className={styles.stat}>
           <div className={styles.statLabel}>Всего кликов:</div>
-          <div className={styles.statValue}>{totalClicks.toLocaleString()}</div>
+          <div className={styles.statValue}>{formatNumber(D(totalClicks))}</div>
         </div>
       </div>
     </div>

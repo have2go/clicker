@@ -1,0 +1,188 @@
+// Bottom sheet overlay
+.sheetOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 200ms ease;
+  z-index: 999;
+}
+
+.sheetOverlayOpen {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+// Bottom sheet container
+.bottomSheet {
+  position: fixed;
+  left: 50%;
+  bottom: 0;
+  width: min(600px, 100%);
+  height: min(78vh, 720px);
+  transform: translate(-50%, calc(100% - var(--sheet-peek)));
+  transition: transform 240ms cubic-bezier(0.2, 0.9, 0.2, 1);
+  z-index: 1000;
+
+  display: flex;
+  flex-direction: column;
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+  background: rgba(20, 20, 20, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  will-change: transform;
+}
+
+.bottomSheetDragging {
+  transition: none; // Отключаем transition во время драга для мгновенной реакции
+}
+
+.bottomSheetOpen {
+  transform: translate(-50%, 0);
+}
+
+.sheetHeader {
+  padding: 0.5rem 0.75rem 0.75rem;
+  cursor: grab;
+  touch-action: none; // Предотвращаем дефолтное поведение браузера
+  user-select: none;
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.sheetHandle {
+  width: 44px;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.25);
+  margin: 0.25rem auto 0.6rem;
+  pointer-events: auto; // Черточка теперь кликабельна
+  cursor: pointer; // Курсор pointer для клика (независимо от grab на header)
+  transition: background 200ms ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.4);
+  }
+
+  .sheetHeader:active &:not(:hover) {
+    background: rgba(255, 255, 255, 0.35);
+  }
+}
+
+// Tabs navigation
+.tabs {
+  display: flex;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.25rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  overflow-x: auto; // Включаем горизонтальный скролл
+  overflow-y: hidden;
+  
+  // Hide scrollbar (keep scroll working)
+  scrollbar-width: none; // Firefox
+  -ms-overflow-style: none; // IE/Legacy Edge
+
+  &::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none; // Chrome/Safari/Edge
+  }
+}
+
+.tab {
+  flex: 0 0 auto; // Не сжимаем табы, позволяем им иметь естественную ширину
+  min-width: fit-content; // Минимальная ширина по содержимому
+  padding: 0.75rem 1rem;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap; // Запрещаем перенос текста
+  -webkit-tap-highlight-color: transparent; // Убираем синюю подсветку
+
+  &:hover {
+    color: rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 0.05);
+  }
+}
+
+.tabActive {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+  }
+}
+
+.sheetContent {
+  flex: 1;
+  min-height: 0; // important for flex child scrolling
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0.75rem;
+
+  // Hide scrollbar (keep scroll working)
+  scrollbar-width: none; // Firefox
+  -ms-overflow-style: none; // IE/Legacy Edge
+
+  &::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none; // Chrome/Safari/Edge
+  }
+}
+
+// Адаптация для маленьких экранов
+@media (max-width: 450px) {
+  .tabs {
+    max-width: 100%;
+    padding: 0.2rem;
+  }
+
+  .tab {
+    padding: 0.6rem 0.5rem;
+    font-size: 0.8rem;
+  }
+  
+  .sheetHeader {
+    padding: 0.4rem 0.6rem 0.6rem;
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+
+    &:active {
+      cursor: grabbing;
+    }
+  }
+  
+  .sheetContent {
+    padding: 0.6rem;
+  }
+}
+
+// Адаптация для очень маленьких экранов - только эмодзи в табах
+@media (max-width: 390px) {
+  .tabText {
+    display: none; // Скрываем текст, оставляем только эмодзи
+  }
+
+  .tab {
+    padding: 0.6rem 0.25rem; // Уменьшаем padding
+    font-size: 1.2rem; // Увеличиваем эмодзи
+  }
+}
+
