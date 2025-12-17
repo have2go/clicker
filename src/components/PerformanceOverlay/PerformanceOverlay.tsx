@@ -21,7 +21,7 @@ export function PerformanceOverlay({ isVisible }: PerformanceOverlayProps) {
     const overlayHeight = 200 // приблизительная высота
     return {
       x: window.innerWidth - overlayWidth - 20, // 20px от правого края
-      y: window.innerHeight / 2 - overlayHeight / 2 - 50 // чуть выше середины
+      y: window.innerHeight / 2 - overlayHeight / 2 - 165 // выше середины
     }
   })
   const [isDragging, setIsDragging] = useState(false)
@@ -123,17 +123,73 @@ export function PerformanceOverlay({ isVisible }: PerformanceOverlayProps) {
     setIsDragging(false)
   }, [])
 
-  // Add global mouse event listeners
+  // Touch handlers for mobile devices
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    // Allow dragging only if touched on overlay background (not on buttons or table cells)
+    const target = e.target as HTMLElement
+
+    // Don't start dragging if touched on buttons
+    if (target.tagName === 'BUTTON' || target.closest('button')) {
+      return
+    }
+
+    // Don't start dragging if touched on table cells (but allow touching on table background)
+    if (target.tagName === 'TD' || target.tagName === 'TH' ||
+        target.closest('td') || target.closest('th')) {
+      return
+    }
+
+    e.preventDefault()
+    setIsDragging(true)
+
+    const touch = e.touches[0]
+    // Получаем текущие координаты overlay
+    if (overlayRef.current) {
+      const rect = overlayRef.current.getBoundingClientRect()
+      setDragStart({
+        x: touch.clientX - rect.left,
+        y: touch.clientY - rect.top
+      })
+    }
+  }, [])
+
+  const handleTouchMove = useCallback((e: TouchEvent) => {
+    if (isDragging && e.touches.length === 1) {
+      e.preventDefault()
+      const touch = e.touches[0]
+      const newX = touch.clientX - dragStart.x
+      const newY = touch.clientY - dragStart.y
+
+      // Ограничиваем позицию, чтобы overlay не уходил за границы экрана
+      const maxX = window.innerWidth - 280 // Предполагаем ширину overlay
+      const maxY = window.innerHeight - 200 // Предполагаем высоту overlay
+
+      setPosition({
+        x: Math.max(0, Math.min(newX, maxX)),
+        y: Math.max(0, Math.min(newY, maxY))
+      })
+    }
+  }, [isDragging, dragStart])
+
+  const handleTouchEnd = useCallback(() => {
+    setIsDragging(false)
+  }, [])
+
+  // Add global mouse and touch event listeners
   useEffect(() => {
     if (isDragging) {
       document.addEventListener('mousemove', handleMouseMove)
       document.addEventListener('mouseup', handleMouseUp)
+      document.addEventListener('touchmove', handleTouchMove, { passive: false })
+      document.addEventListener('touchend', handleTouchEnd)
       return () => {
         document.removeEventListener('mousemove', handleMouseMove)
         document.removeEventListener('mouseup', handleMouseUp)
+        document.removeEventListener('touchmove', handleTouchMove)
+        document.removeEventListener('touchend', handleTouchEnd)
       }
     }
-  }, [isDragging, handleMouseMove, handleMouseUp])
+  }, [isDragging, handleMouseMove, handleMouseUp, handleTouchMove, handleTouchEnd])
 
   // Инициализация метрик при показе overlay
   useEffect(() => {
@@ -183,6 +239,7 @@ export function PerformanceOverlay({ isVisible }: PerformanceOverlayProps) {
         cursor: isDragging ? 'grabbing' : 'grab'
       }}
       onMouseDown={handleMouseDown}
+      onTouchStart={handleTouchStart}
     >
       <div className={styles.content}>
         <div className={styles.buttonRow}>
