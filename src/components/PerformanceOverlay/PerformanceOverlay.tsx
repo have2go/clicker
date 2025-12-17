@@ -34,7 +34,6 @@ export function PerformanceOverlay({ isVisible }: PerformanceOverlayProps) {
   const {} = useGameStore()
 
   const updateMetrics = useCallback(() => {
-    const now = Date.now()
     const sessionStartTime = (performanceMonitor as any).sessionStartTime
 
     if (sessionStartTime) {
@@ -147,7 +146,7 @@ export function PerformanceOverlay({ isVisible }: PerformanceOverlayProps) {
   useEffect(() => {
     if (!isVisible) return
 
-    const handleMetricsUpdate = (event: CustomEvent) => {
+    const handleMetricsUpdate = () => {
       // Немедленное обновление при событиях сохранения или пересчета
       updateMetrics()
     }

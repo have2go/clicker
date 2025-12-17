@@ -1,17 +1,30 @@
 import { renderHook } from '@testing-library/react'
 import { useGameLoop } from '../useGameLoop'
 
+// Extend the global type for tests
+declare const global: any
+
 // Mock performance for tests
-global.performance = {
-  now: jest.fn(() => 1000)
-} as any
+Object.defineProperty(global, 'performance', {
+  value: {
+    now: jest.fn(() => 1000)
+  },
+  writable: true
+})
 
 // Mock requestAnimationFrame and cancelAnimationFrame
 const mockRequestAnimationFrame = jest.fn()
 const mockCancelAnimationFrame = jest.fn()
 
-global.requestAnimationFrame = mockRequestAnimationFrame
-global.cancelAnimationFrame = mockCancelAnimationFrame
+Object.defineProperty(global, 'requestAnimationFrame', {
+  value: mockRequestAnimationFrame,
+  writable: true
+})
+
+Object.defineProperty(global, 'cancelAnimationFrame', {
+  value: mockCancelAnimationFrame,
+  writable: true
+})
 
 describe('useGameLoop', () => {
   beforeEach(() => {
