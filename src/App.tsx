@@ -12,13 +12,13 @@ import { PrestigePanel } from './components/PrestigePanel/PrestigePanel'
 import { DevPanel } from './components/DevPanel/DevPanel'
 import { PerformanceOverlay } from './components/PerformanceOverlay'
 import { BottomSheet } from './components/BottomSheet/BottomSheet'
+import { ClickSphere } from './components/ClickSphere'
 import { ActiveTab } from './components/tabs/ActiveTab'
 import { PassiveTab } from './components/tabs/PassiveTab'
 import { GlobalTab } from './components/tabs/GlobalTab'
 import { OfflineTab } from './components/tabs/OfflineTab'
 import type { Tab } from './hooks/useBottomSheetGestures'
 import styles from './App.module.scss'
-import diamondImage from './assets/diamond.svg'
 
 function App() {
   const [activeTab, setActiveTab] = useState<Tab | null>(null)
@@ -114,6 +114,11 @@ function App() {
 
   const isSheetOpen = activeTab !== null
 
+  // Размер кнопки клика (адаптивный)
+  const clickSize = useMemo(() => {
+    return isSheetOpen ? 220 : 260
+  }, [isSheetOpen])
+
   return (
     <div className={`${styles.container} ${isSheetOpen ? styles.sheetOpen : ''}`}>
       {/* DEV Tools */}
@@ -139,9 +144,11 @@ function App() {
 
       {/* Click button with CPS below */}
       <div className={styles.clickArea}>
-        <button className={styles.clickButton} onClick={handleClick}>
-          <img src={diamondImage} alt="Diamond" className={styles.diamondImage} />
-        </button>
+        <ClickSphere
+          onClick={handleClick}
+          size={clickSize}
+          disabled={false}
+        />
       </div>
 
       {/* Bottom sheet with tabs */}
