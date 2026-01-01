@@ -42,6 +42,7 @@ export const ClickSphere3D = memo(function ClickSphere3D({
     size = 260,
     disabled = false
 }: ClickSphere3DProps) {
+    console.log(size)
     return (
         <>
             <Canvas>
