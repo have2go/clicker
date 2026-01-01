@@ -1,1 +1,1 @@
-export { ClickSphere3D as ClickSphere } from './ClickSphere3D'
+export { ClickSphere3D } from "./ClickSphere3D.tsx";

@@ -12,13 +12,13 @@ import { PrestigePanel } from './components/PrestigePanel/PrestigePanel'
 import { DevPanel } from './components/DevPanel/DevPanel'
 import { PerformanceOverlay } from './components/PerformanceOverlay'
 import { BottomSheet } from './components/BottomSheet/BottomSheet'
-import { ClickSphere } from './components/ClickSphere'
 import { ActiveTab } from './components/tabs/ActiveTab'
 import { PassiveTab } from './components/tabs/PassiveTab'
 import { GlobalTab } from './components/tabs/GlobalTab'
 import { OfflineTab } from './components/tabs/OfflineTab'
 import type { Tab } from './hooks/useBottomSheetGestures'
 import styles from './App.module.scss'
+import { ClickSphere3D } from "./components/ClickSphere";
 
 function App() {
   const [activeTab, setActiveTab] = useState<Tab | null>(null)
@@ -114,10 +114,7 @@ function App() {
 
   const isSheetOpen = activeTab !== null
 
-  // Размер кнопки клика (адаптивный)
-  const clickSize = useMemo(() => {
-    return isSheetOpen ? 220 : 260
-  }, [isSheetOpen])
+  const MAIN_BUTTON_SIZE = 260;
 
   return (
     <div className={`${styles.container} ${isSheetOpen ? styles.sheetOpen : ''}`}>
@@ -144,10 +141,9 @@ function App() {
 
       {/* Click button with CPS below */}
       <div className={styles.clickArea}>
-        <ClickSphere
+        <ClickSphere3D
           onClick={handleClick}
-          size={clickSize}
-          disabled={false}
+          size={MAIN_BUTTON_SIZE}
         />
       </div>
 
